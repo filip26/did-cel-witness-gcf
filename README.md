@@ -13,3 +13,22 @@ Key features:
 - **Cloud KMS integration** – secure key management for signing.  
 - **Serverless function** – scalable, low-overhead execution.
 
+## HTTP Service
+
+### Request
+
+```json
+{
+  "digestMultibase": "z..",
+}
+```
+or 
+```json
+{
+  "@value": "...",
+  "@type":  "..."
+}
+```
+where `@type` is one of
+* `https://w3id.org/security#multibase`
+* `http://www.w3.org/2001/XMLSchema#base64Binary`
