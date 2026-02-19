@@ -16,7 +16,7 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
   * Validation – Strictly enforces byte-length requirements (e.g., 32 bytes for Ed25519/P-256) before hitting the KMS API.
   * Efficiency – Uses streaming to minimize memory allocation and `static final` constants for O(1) jump-table execution.
 
-## HTTP Service
+## Service
 
 ### Request
 
@@ -25,23 +25,13 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
   "digestMultibase": "z..",
 }
 ```
-or 
-```json
-{
-  "@value": "...",
-  "@type":  "..."
-}
-```
-where `@type` is one of
-* `https://w3id.org/security#multibase`
-* `http://www.w3.org/2001/XMLSchema#base64Binary`
 
 ### Response
 
 ```json
 {
-  "type": "ObliviousSignatureProof",
-  "crypto": "ecdsa",
+  "type": "DataIntegrityProof",
+  "cryptosuite": "...",
   "created": "2025-12-06T22:09:08Z",
   "proofPurpose": "assertionMethod",
   "proofValue": "zxwVk4...",
