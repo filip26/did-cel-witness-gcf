@@ -93,3 +93,20 @@ mvn clean package
   --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID"
 ```
 
+### Verify
+
+Combine request data and response data into a single signed JSON document.
+
+```json
+{
+  "digestMultibase": "z..",
+  "proof": {
+	  "type": "DataIntegrityProof",
+	  "cryptosuite": "...",
+	  "created": "2025-12-06T22:09:08Z",
+	  "proofPurpose": "assertionMethod",
+	  "proofValue": "zxwVk4...",
+	  "verificationMethod": "did:cel:zW1poy..."  
+  }
+}
+```
