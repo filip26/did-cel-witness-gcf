@@ -12,9 +12,7 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
 - Signed & timestamped attestations – cryptographically verifiable proofs.  
 - Cloud KMS integration – secure key management for signing.  
 - Serverless function – scalable, low-overhead execution.
-  * Self-Configuring – On cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
-  * Validation – Strictly enforces byte-length requirements (e.g., 32 bytes for Ed25519/P-256) before hitting the KMS API.
-  * Efficiency – Uses streaming to minimize memory allocation and `static final` constants for O(1) jump-table execution.
+- Self-Configuring – On cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
 
 ## Service
 
