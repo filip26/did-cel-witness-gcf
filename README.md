@@ -12,7 +12,7 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
 - Signed & timestamped attestations – cryptographically verifiable proofs.  
 - Cloud KMS integration – secure key management for signing.  
 - Serverless function – scalable, low-overhead execution.
-- Self-Configuring – On cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
+- Self-Configuring – on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
 
 ## Service
 
@@ -20,20 +20,20 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
 
 ```json
 {
-  "digestMultibase": "z..",
+  "digestMultibase": "z.."
 }
 ```
 
 ### Response
 
-```json
+```javascript
 {
   "type": "DataIntegrityProof",
-  "cryptosuite": "...",
+  "cryptosuite": "...", // eddsa-jcs-2022 or ecdsa-jcs-2019
   "created": "2025-12-06T22:09:08Z",
+  "verificationMethod": "...",
   "proofPurpose": "assertionMethod",
-  "proofValue": "zxwVk4...",
-  "verificationMethod": "did:cel:zW1poy..."
+  "proofValue": "zxwVk4..."
 }
 ```
 
@@ -54,7 +54,7 @@ The following environment variables are required:
 | `KMS_KEY_RING` | Name of the KMS KeyRing |
 | `KMS_KEY_ID` | Name of the CryptoKey |
 | `KMS_KEY_VERSION` | Key version (default: `1`) |
- 
+| `VERIFICATION_METHOD` | URL (e.g. `did:...`) |
 
 ### IAM Permissions
 Grant these roles to the service account:
@@ -90,7 +90,7 @@ mvn clean package
   --runtime=java25 \
   --entry-point=WitnessService \
   --trigger-http \
-  --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID"
+  --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID,VERIFICATION_METHOD=$VERIFICATION_METHOD"
 ```
 
 ## Verify
@@ -104,9 +104,9 @@ Combine request data and response data into a single signed JSON document.
 	  "type": "DataIntegrityProof",
 	  "cryptosuite": "...",
 	  "created": "2025-12-06T22:09:08Z",
+	  "verificationMethod": "did:...",	  
 	  "proofPurpose": "assertionMethod",
-	  "proofValue": "zxwVk4...",
-	  "verificationMethod": "did:cel:zW1poy..."  
+	  "proofValue": "zxwVk4..."
   }
 }
 ```
