@@ -23,7 +23,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 * `digestMultibase` must contain the canonical digest you want signed.
 * The response will include the signed JSON proof from the witness service.
 
-### `ecdsa-jcs-2019` 256bit
+#### `ecdsa-jcs-2019` 256bit
 
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
@@ -31,7 +31,7 @@ curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
   -d '{"digestMultibase":"zabc123..."}'
 ```
 
-### `eddsa-rdfc-2022` 256bit
+#### `eddsa-rdfc-2022` 256bit
 
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
@@ -41,7 +41,7 @@ curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
 
 ## Service
 
-### Request
+#### Request
 
 ```json
 {
@@ -49,7 +49,7 @@ curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
 }
 ```
 
-### Response
+#### Response
 
 ```javascript
 {
