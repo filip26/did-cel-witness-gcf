@@ -19,8 +19,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 
 ## Test Endpoints
 
-* Replace the URLs with your deployed function endpoints.
-* `digestMultibase` must contain the canonical digest you want signed.
+* `digestMultibase` must contain the canonical digest you want signed, witnessed.
 * The response will include the signed JSON proof from the witness service.
 
 #### `ecdsa-jcs-2019` 256bit
@@ -143,22 +142,15 @@ mvn clean package
 
 ## Test
 
-Send a POST request with the digest to the deployed Cloud Function:
+1. Replace the URLs with your deployed function endpoints
+2. `digestMultibase` must contain the canonical digest you want signed, witnessed.
+3. Send a POST request with the digest to the deployed Cloud Function:
 
 ```bash
 curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
   -H "Content-Type: application/json" \
-  -d '{"digestMultibase":"zabc123..."}'
+  -d '{"digestMultibase":"..."}'
 ```
-
-### Services
-
-```bash
-curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
-  -H "Content-Type: application/json" \
-  -d '{"digestMultibase":"zabc123..."}'
-```
-
 
 ## Verify
 
