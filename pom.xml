@@ -1,0 +1,155 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.apicatalog</groupId>
+	<artifactId>iron-did-cel-witness-service</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+
+	<name>Iron did:cel Witness Service</name>
+
+	<description>
+		An implementation of HTTP-triggered Google Cloud Run Functions providing
+		did:cel Witness endpoint.
+	</description>
+
+	<url>https://github.com/filip26/did-cel-witness-gcf</url>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
+
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/filip26/did-cel-witness-gcf/issues</url>
+	</issueManagement>
+
+	<scm>
+		<connection>scm:git:git://github.com/filip26/did-cel-witness-gcf.git</connection>
+		<developerConnection>
+			scm:git:git://github.com/filip26/did-cel-witness-gcf.git</developerConnection>
+		<url>https://github.com/filip26/did-cel-witness-gcf/tree/main</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>filip26</id>
+			<name>Filip Kolarik</name>
+			<email>filip26@gmail.com</email>
+			<roles>
+				<role>author</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<inceptionYear>2026</inceptionYear>
+
+	<properties>
+		<maven.compiler.release>25</maven.compiler.release>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<argLine>-Dfile.encoding=UTF-8</argLine>
+
+		<jakarta.json.version>2.0.1</jakarta.json.version>
+
+		<junit.version>6.0.1</junit.version>
+
+	</properties>
+
+	<!--	<repositories>
+		<repository>
+			<id>deps</id>
+			<url>file:///${project.basedir}/deps</url>
+		</repository>
+	</repositories>
+-->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>26.73.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.google.cloud.functions</groupId>
+			<artifactId>functions-framework-api</artifactId>
+			<version>2.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-kms</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.apicatalog</groupId>
+			<artifactId>copper-multibase</artifactId>
+			<version>4.1.0</version>
+		</dependency>
+		<!--		<dependency>
+			<groupId>jakarta.json</groupId>
+			<artifactId>jakarta.json-api</artifactId>
+			<version>2.1.3</version>
+		</dependency>-->
+		<dependency>
+			<groupId>com.apicatalog</groupId>
+			<artifactId>titanium-jcs</artifactId>
+			<version>3.0.0-M2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.parsson</groupId>
+			<artifactId>jakarta.json</artifactId>
+			<version>1.1.5</version>
+		</dependency>
+
+		<!-- Tests -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.2</version>
+			</plugin>
+
+			<plugin>
+				<!--
+          Google Cloud Functions Framework Maven plugin
+
+          This plugin allows you to run Cloud Functions Java code
+          locally. Use the following terminal command to run a
+          given function locally:
+
+          mvn function:run -Drun.functionTarget=your.package.yourFunction
+        -->
+				<groupId>com.google.cloud.functions</groupId>
+				<artifactId>function-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<!--                <configuration>-->
+				<!--
+                <functionTarget>com.apicatalog.vc.fnc.VerifyFunction</functionTarget>-->
+				<!--                </configuration>-->
+			</plugin>
+		</plugins>
+	</build>
+</project>
