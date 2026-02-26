@@ -17,6 +17,28 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 - Serverless function - scalable, low-overhead execution.
 - Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
 
+## Test Endpoints
+
+* Replace the URLs with your deployed function endpoints.
+* `digestMultibase` must contain the canonical digest you want signed.
+* The response will include the signed JSON proof from the witness service.
+
+### `ecdsa-jcs-2019` 256bit
+
+```bash
+curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
+  -H "Content-Type: application/json" \
+  -d '{"digestMultibase":"zabc123..."}'
+```
+
+### `eddsa-rdfc-2022` 256bit
+
+```bash
+curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
+  -H "Content-Type: application/json" \
+  -d '{"digestMultibase":"zabc123..."}'
+```
+
 ## Service
 
 ### Request
@@ -32,7 +54,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 ```javascript
 {
   "type": "DataIntegrityProof",
-  "cryptosuite": "...", // eddsa-jcs-2022 or ecdsa-jcs-2019
+  "cryptosuite": "...",
   "created": "2022-02-17T17:59:08Z",
   "nonce": "kiYZJHL...",
   "verificationMethod": "...",
@@ -76,17 +98,16 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 | `ecdsa-rdfc-2019` | `EC_SIGN_P384_SHA384` | `RDFC` | 384 bits |
 | `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
 
-
 #### Notes
 
-- The selected **cryptosuite**, **canonicalization method (`C14N`)**, and **KMS key algorithm** must be compatible.
+- The KMS key must be created with a signing algorithm that is supported.
 - `JCS` refers to JSON Canonicalization Scheme.
 - `RDFC` refers to RDF Dataset Canonicalization.
-- The KMS key must be created with a signing algorithm that matches the selected cryptosuite.
+
 ### IAM Permissions
 Grant these roles to the service account:
 1. `roles/cloudkms.signer` (To sign)
-2. `roles/cloudkms.viewer` (To detect key size/algo during initialization)
+2. `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
 
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
@@ -129,6 +150,15 @@ curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
   -H "Content-Type: application/json" \
   -d '{"digestMultibase":"zabc123..."}'
 ```
+
+### Services
+
+```bash
+curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
+  -H "Content-Type: application/json" \
+  -d '{"digestMultibase":"zabc123..."}'
+```
+
 
 ## Verify
 
