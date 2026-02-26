@@ -1,4 +1,8 @@
+
+
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 
 import com.apicatalog.multibase.Multibase;
@@ -154,7 +158,8 @@ public class WitnessService implements HttpFunction {
 
         if (!Multibase.BASE_58_BTC.isEncoded(digest)
                 && !Multibase.BASE_64_URL.isEncoded(digest)) {
-            sendError(response, 400, "Bad Request", "digestMultibase value must be multibase: base58btc or baseURLnopad ");
+            sendError(response, 400, "Bad Request",
+                    "digestMultibase value must be multibase: base58btc or baseURLnopad ");
             return;
         }
 
@@ -193,14 +198,25 @@ public class WitnessService implements HttpFunction {
     }
 
     private static byte[] ec256Sign(byte[] blob) {
-        final var builder = AsymmetricSignRequest.newBuilder().setName(RESOURCE_NAME);
-        builder.setDigest(Digest.newBuilder().setSha256(ByteString.copyFrom(blob)).build());
-        return KMS_CLIENT.asymmetricSign(builder.build()).getSignature().toByteArray();
+        try {
+            final var hash = MessageDigest.getInstance("SHA-256").digest(blob);
+            final var builder = AsymmetricSignRequest.newBuilder().setName(RESOURCE_NAME);
+            builder.setDigest(Digest.newBuilder().setSha256(ByteString.copyFrom(hash)).build());
+            return KMS_CLIENT.asymmetricSign(builder.build()).getSignature().toByteArray();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static byte[] ec384Sign(byte[] blob) {
-        final var builder = AsymmetricSignRequest.newBuilder().setName(RESOURCE_NAME);
-        builder.setDigest(Digest.newBuilder().setSha384(ByteString.copyFrom(blob)).build());
-        return KMS_CLIENT.asymmetricSign(builder.build()).getSignature().toByteArray();
+        try {
+            final var hash = MessageDigest.getInstance("SHA-384").digest(blob);
+            final var builder = AsymmetricSignRequest.newBuilder().setName(RESOURCE_NAME);
+            builder.setDigest(Digest.newBuilder().setSha384(ByteString.copyFrom(hash)).build());
+            return KMS_CLIENT.asymmetricSign(builder.build()).getSignature().toByteArray();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 }

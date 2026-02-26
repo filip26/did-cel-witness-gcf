@@ -25,7 +25,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
   - Base64 URL without padding
 * The response will include the signed JSON proof from the witness service.
 
-#### `ecdsa-jcs-2019`, `256bit`, `us-central`, `HSM`
+#### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
 
 ```bash
 curl -X POST https://us-central1-api-catalog.cloudfunctions.net/red-witness \
@@ -33,7 +33,7 @@ curl -X POST https://us-central1-api-catalog.cloudfunctions.net/red-witness \
   -d '{"digestMultibase":"..."}'
 ```
 
-#### `eddsa-rdfc-2022`, `256bit`
+#### `eddsa-rdfc-2022`, `256bit`, `europe-west3`
 
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
@@ -153,8 +153,9 @@ mvn clean package
   --gen2 \
   --runtime=java25 \
   --source=. \
-  --entry-point=com.apicatalog.gcf.WitnessService \
+  --entry-point=WitnessService \
   --trigger-http \
+  --service-account=SA-NAME@PROJECT_ID.iam.gserviceaccount.com
   --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID,C14N=$C14N,VERIFICATION_METHOD=$VERIFICATION_METHOD"
 ```
 
