@@ -25,7 +25,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
   - Base64 URL without padding
 * The response will include the signed JSON proof from the witness service.
 
-#### `ecdsa-jcs-2019` 256bit
+#### `ecdsa-jcs-2019`, `256bit`, `region:global`, `HSM`
 
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
@@ -33,7 +33,7 @@ curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
   -d '{"digestMultibase":"..."}'
 ```
 
-#### `eddsa-rdfc-2022` 256bit
+#### `eddsa-rdfc-2022`, `256bit`
 
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
@@ -138,10 +138,13 @@ mvn clean package
  gcloud functions deploy witness \
   --gen2 \
   --runtime=java25 \
+  --source=. \
   --entry-point=WitnessService \
   --trigger-http \
   --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID,C14N=$C14N,VERIFICATION_METHOD=$VERIFICATION_METHOD"
 ```
+
+If deploying a public witness service without authentication, you can add the flag `--allow-unauthenticated`.
 
 ## Test
 
