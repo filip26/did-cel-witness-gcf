@@ -19,7 +19,10 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 
 ## Test Endpoints
 
-* `digestMultibase` must contain the canonical digest you want signed, witnessed.
+* `digestMultibase` must contain canonical digest you want signed, witnessed.
+* `digestMultibase` field must be multibase-encoded. Supported encodings:
+  - Base58BTC
+  - Base64 URL without padding
 * The response will include the signed JSON proof from the witness service.
 
 #### `ecdsa-jcs-2019` 256bit
@@ -27,7 +30,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
   -H "Content-Type: application/json" \
-  -d '{"digestMultibase":"zabc123..."}'
+  -d '{"digestMultibase":"..."}'
 ```
 
 #### `eddsa-rdfc-2022` 256bit
@@ -35,7 +38,7 @@ curl -X POST https://dsdssdsd.cloudfunctions.net/red-witness \
 ```bash
 curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
   -H "Content-Type: application/json" \
-  -d '{"digestMultibase":"zabc123..."}'
+  -d '{"digestMultibase":"..."}'
 ```
 
 ## Service
@@ -142,9 +145,12 @@ mvn clean package
 
 ## Test
 
-1. Replace the URLs with your deployed function endpoints
-2. `digestMultibase` must contain the canonical digest you want signed, witnessed.
-3. Send a POST request with the digest to the deployed Cloud Function:
+* Replace the URLs with your deployed function endpoints
+* `digestMultibase` must contain canonical digest you want signed, witnessed.
+* `digestMultibase` field must be multibase-encoded. Supported encodings:
+  - Base58BTC
+  - Base64 URL without padding
+* Send a POST request with the digest to the deployed Cloud Function:
 
 ```bash
 curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
@@ -154,7 +160,7 @@ curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
 
 ## Verify
 
-Combine request data and response data into a single signed JSON document.
+* Combine request data and response data into a single signed JSON document.
 
 ```json
 {
@@ -171,9 +177,8 @@ Combine request data and response data into a single signed JSON document.
 }
 ```
 
-### Notes
-
 * The `digestMultibase` must match the digest of the content you signed.  
 * `verificationMethod` must point to the correct public key (DID or KMS reference) used for signing.  
 * All fields in the `proof` object must remain unchanged for the verification to succeed.  
 * Use a Verifiable Credentials / Data Integrity (VC DI) verifier to validate the signed JSON proof.  
+
