@@ -159,7 +159,7 @@ public class WitnessService implements HttpFunction {
         if (!Multibase.BASE_58_BTC.isEncoded(digest)
                 && !Multibase.BASE_64_URL.isEncoded(digest)) {
             sendError(response, 400, "Bad Request",
-                    "digestMultibase value must be multibase: base58btc or baseURLnopad ");
+                    "digestMultibase value must be multibase: base58btc or base64URLnopad ");
             return;
         }
 
