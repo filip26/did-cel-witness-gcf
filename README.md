@@ -30,7 +30,8 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
 {
   "type": "DataIntegrityProof",
   "cryptosuite": "...", // eddsa-jcs-2022 or ecdsa-jcs-2019
-  "created": "2025-12-06T22:09:08Z",
+  "created": "2022-02-17T17:59:08Z",
+  "nonce": "kiYZJHL...",
   "verificationMethod": "...",
   "proofPurpose": "assertionMethod",
   "proofValue": "zxwVk4..."
@@ -42,20 +43,44 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
 ### Prerequisites
 * JDK 25
 * Maven 3.9+
-* KMS Key – Asymmetric Signing (EC or EdDSA).
+* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) – Asymmetric Signing (EC or EdDSA).
 
 ### Configuration
 
-The following environment variables are required:
+The service is configured via the following environment variables:
 
-| Variable | Description |
-| :--- | :--- |
-| `KMS_LOCATION` | GCP Region (e.g., `us-central1`) |
-| `KMS_KEY_RING` | Name of the KMS KeyRing |
-| `KMS_KEY_ID` | Name of the CryptoKey |
-| `KMS_KEY_VERSION` | Key version (default: `1`) |
-| `VERIFICATION_METHOD` | URL (e.g. `did:...`) |
+| Variable | Required | Description |
+|----------|----------|------------|
+| `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
+| `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
+| `KMS_KEY_ID` | Yes | Name of the Cloud KMS CryptoKey |
+| `KMS_KEY_VERSION` | No | CryptoKey version to use (default: `1`) |
+| `VERIFICATION_METHOD` | Yes | Verification method identifier (e.g., `did:example:123#key-1`) |
+| `C18N` | Yes | Canonicalization method: `JCS` or `RDFC` |
 
+---
+
+### Supported Cryptosuites
+
+The cryptosuite must match both the selected canonicalization method (`C18N`) and the KMS key algorithm.
+
+| Cryptosuite | KMS Key Algorithm | `C18N` | Key Size |
+|-------------|------------------|--------|----------|
+| `ecdsa-jcs-2019` | `EC_SIGN_P256_SHA256` | `JCS` | 256 bits |
+| `ecdsa-jcs-2019` | `EC_SIGN_P384_SHA384` | `JCS` | 384 bits |
+| `eddsa-jcs-2022` | `EC_SIGN_ED25519` | `JCS` | 256 bits |
+| `ecdsa-rdfc-2019` | `EC_SIGN_P256_SHA256` | `RDFC` | 256 bits |
+| `ecdsa-rdfc-2019` | `EC_SIGN_P384_SHA384` | `RDFC` | 384 bits |
+| `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
+
+---
+
+#### Notes
+
+- The selected **cryptosuite**, **canonicalization method (`C18N`)**, and **KMS key algorithm** must be compatible.
+- `JCS` refers to JSON Canonicalization Scheme.
+- `RDFC` refers to RDF Dataset Canonicalization.
+- The KMS key must be created with a signing algorithm that matches the selected cryptosuite.
 ### IAM Permissions
 Grant these roles to the service account:
 1. `roles/cloudkms.signer` (To sign)
@@ -103,7 +128,8 @@ Combine request data and response data into a single signed JSON document.
   "proof": {
 	  "type": "DataIntegrityProof",
 	  "cryptosuite": "...",
-	  "created": "2025-12-06T22:09:08Z",
+      "created": "2022-02-17T17:59:08Z",
+      "nonce": "kiYZJHL...",	  
 	  "verificationMethod": "did:...",	  
 	  "proofPurpose": "assertionMethod",
 	  "proofValue": "zxwVk4..."
