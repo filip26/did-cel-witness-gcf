@@ -1,6 +1,6 @@
 # `did:cel` Witness Service
 
-A did:cel witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. Importantly, the service never sees the event content, preserving privacy while providing verifiable proofs.
+A did:cel witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. The service never sees the event content, preserving privacy while providing verifiable proofs.
 
 ## Overview
 
@@ -12,7 +12,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 
 - Oblivious witnessing - operates only on hashes; the witness cannot see the event content.  
 - Signed & timestamped attestations - cryptographically verifiable proofs.  
-- Static O(1) canonicalization - supports JCS or RDFC
+- ⚡ Static O(1) c14n - supports RDFC or JCS
 - Cloud KMS integration - secure key management for signing.  
 - Serverless function - scalable, low-overhead execution.
 - Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
