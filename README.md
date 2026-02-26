@@ -1,18 +1,21 @@
 # `did:cel` Witness Service
 
-A **did:cel witness service** performing **oblivious witnessing**, issuing signed and timestamped attestations over cryptographic event log hashes using **Cloud KMS** in a serverless function environment. Importantly, the service **never sees the event content**, preserving privacy while providing verifiable proofs.
+A did:cel witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. Importantly, the service never sees the event content, preserving privacy while providing verifiable proofs.
 
 ## Overview
 
-Witnesses provide **cryptographic proofs** that an event existed at a specific time without accessing the event itself. This ensures **privacy, auditability, and integrity** in `did:cel` event logs.
+Witnesses provide cryptographic proofs that an event existed at a specific time without accessing the event itself. This ensures privacy, auditability, and integrity in `did:cel` event logs.
+
+The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD, JCS, RDFC processing; the canonicalization is strictly performed on pre-computed canonical data structures.
 
 ### ✨ Features
 
-- Oblivious witnessing – operates only on hashes; the witness cannot see the event content.  
-- Signed & timestamped attestations – cryptographically verifiable proofs.  
-- Cloud KMS integration – secure key management for signing.  
-- Serverless function – scalable, low-overhead execution.
-- Self-Configuring – on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
+- Oblivious witnessing - operates only on hashes; the witness cannot see the event content.  
+- Signed & timestamped attestations - cryptographically verifiable proofs.  
+- Static O(1) canonicalization - supports JCS or RDFC
+- Cloud KMS integration - secure key management for signing.  
+- Serverless function - scalable, low-overhead execution.
+- Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
 
 ## Service
 
