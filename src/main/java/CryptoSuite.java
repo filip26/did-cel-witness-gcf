@@ -177,16 +177,15 @@ public final class CryptoSuite {
 
         var md = MessageDigest.getInstance(algorithm);
 
-        md.update(canonicalDocument);
-        var docHash = md.digest();
-
         md.update(canonicalProof);
         var proofHash = md.digest();
 
-        var result = new byte[docHash.length + proofHash.length];
-        System.arraycopy(docHash, 0, result, 0, docHash.length);
-        System.arraycopy(proofHash, 0, result, docHash.length, proofHash.length);
+        md.update(canonicalDocument);
+        var docHash = md.digest();
 
+        var result = new byte[proofHash.length + docHash.length];
+        System.arraycopy(proofHash, 0, result, 0, proofHash.length);
+        System.arraycopy(docHash, 0, result, proofHash.length, docHash.length);
         return result;
     }
 

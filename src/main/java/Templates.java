@@ -54,14 +54,14 @@ public class Templates {
     /**
      * Builds the canonical JSON document (JCS) with the given digest.
      *
-     * @param digest multibase digest string including <code>"</code>
+     * @param digest multibase digest string
      * @return UTF-8 encoded JSON document bytes
      */
     public static final byte[] jcsDocument(String digest) {
         return new StringBuilder(22 + digest.length())
-                .append("{\"digestMultibase\":")
+                .append("{\"digestMultibase\":\"")
                 .append(digest)
-                .append("}")
+                .append("\"}")
                 .toString()
                 .getBytes(StandardCharsets.UTF_8);
     }
@@ -116,14 +116,14 @@ public class Templates {
      * literal for the digest.
      * </p>
      *
-     * @param digest the multibase digest string including <code>"</code>
+     * @param digest the multibase digest string
      * @return UTF-8 encoded canonical N-Quads representation of the digest
      */
     public static final byte[] rdfcDocument(String digest) {
         return new StringBuilder(18 + digest.length())
-                .append("_:c14n0 <https://w3id.org/security#digestMultibase> ")
+                .append("_:c14n0 <https://w3id.org/security#digestMultibase> \"")
                 .append(digest)
-                .append("^^<https://w3id.org/security#multibase> .\n")
+                .append("\"^^<https://w3id.org/security#multibase> .\n")
                 .toString()
                 .getBytes(StandardCharsets.UTF_8);
     }

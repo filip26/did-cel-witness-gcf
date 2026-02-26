@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import com.apicatalog.multibase.Multibase;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
@@ -14,7 +15,7 @@ import com.google.protobuf.ByteString;
 import jakarta.json.Json;
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
-import jakarta.json.JsonValue.ValueType;
+import jakarta.json.JsonString;
 import jakarta.json.spi.JsonProvider;
 
 /**
@@ -43,6 +44,7 @@ public class WitnessService implements HttpFunction {
      */
     private static final KeyManagementServiceClient KMS_CLIENT;
 
+    // Static initialization
     private static final JsonProvider JSON = JsonProvider.provider();
 
     // Environment variables
@@ -139,20 +141,25 @@ public class WitnessService implements HttpFunction {
             return;
         }
 
-        var digest = payload.get("digestMultibase");
+        final String digest;
 
-        if (digest == null) {
-            sendError(response, 400, "Bad Request", "Missing digestMultibase key");
-            return;
-        }
+        if (payload.get("digestMultibase") instanceof JsonString jsonString) {
 
-        if (digest.getValueType() != ValueType.STRING) {
+            digest = jsonString.getString();
+
+        } else {
             sendError(response, 400, "Bad Request", "digestMultibase value must be JSON string");
             return;
         }
 
+        if (!Multibase.BASE_58_BTC.isEncoded(digest)
+                && !Multibase.BASE_64_URL.isEncoded(digest)) {
+            sendError(response, 400, "Bad Request", "digestMultibase value must be multibase: base58btc or baseURLnopad ");
+            return;
+        }
+
         try {
-            var proof = CRYPTOSUITE.sign(digest.toString(), VERIFICATION_METHOD);
+            var proof = CRYPTOSUITE.sign(digest, VERIFICATION_METHOD);
 
             response.setStatusCode(200);
             response.setContentType("application/json");

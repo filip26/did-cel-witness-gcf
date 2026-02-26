@@ -11,7 +11,7 @@
 
 	<description>
 		An implementation of HTTP-triggered Google Cloud Run Functions providing
-		did:cel Witness endpoint.
+		did:cel Witness endpoint using Google Cloud KMS.
 	</description>
 
 	<url>https://github.com/filip26/did-cel-witness-gcf</url>
@@ -57,16 +57,8 @@
 		<jakarta.json.version>2.0.1</jakarta.json.version>
 
 		<junit.version>6.0.1</junit.version>
-
 	</properties>
 
-	<!--	<repositories>
-		<repository>
-			<id>deps</id>
-			<url>file:///${project.basedir}/deps</url>
-		</repository>
-	</repositories>
--->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -98,16 +90,6 @@
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multibase</artifactId>
 			<version>4.1.0</version>
-		</dependency>
-		<!--		<dependency>
-			<groupId>jakarta.json</groupId>
-			<artifactId>jakarta.json-api</artifactId>
-			<version>2.1.3</version>
-		</dependency>-->
-		<dependency>
-			<groupId>com.apicatalog</groupId>
-			<artifactId>titanium-jcs</artifactId>
-			<version>3.0.0-M2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.parsson</groupId>
