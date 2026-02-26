@@ -56,15 +56,13 @@ The service is configured via the following environment variables:
 | `KMS_KEY_ID` | Yes | Name of the Cloud KMS CryptoKey |
 | `KMS_KEY_VERSION` | No | CryptoKey version to use (default: `1`) |
 | `VERIFICATION_METHOD` | Yes | Verification method identifier (e.g., `did:example:123#key-1`) |
-| `C18N` | Yes | Canonicalization method: `JCS` or `RDFC` |
-
----
+| `C14N` | Yes | Canonicalization method: `JCS` or `RDFC` |
 
 ### Supported Cryptosuites
 
-The cryptosuite must match both the selected canonicalization method (`C18N`) and the KMS key algorithm.
+The cryptosuite must match both the selected canonicalization method (`C14N`) and the KMS key algorithm.
 
-| Cryptosuite | KMS Key Algorithm | `C18N` | Key Size |
+| Cryptosuite | KMS Key Algorithm | `C14N` | Key Size |
 |-------------|------------------|--------|----------|
 | `ecdsa-jcs-2019` | `EC_SIGN_P256_SHA256` | `JCS` | 256 bits |
 | `ecdsa-jcs-2019` | `EC_SIGN_P384_SHA384` | `JCS` | 384 bits |
@@ -73,11 +71,10 @@ The cryptosuite must match both the selected canonicalization method (`C18N`) an
 | `ecdsa-rdfc-2019` | `EC_SIGN_P384_SHA384` | `RDFC` | 384 bits |
 | `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
 
----
 
 #### Notes
 
-- The selected **cryptosuite**, **canonicalization method (`C18N`)**, and **KMS key algorithm** must be compatible.
+- The selected **cryptosuite**, **canonicalization method (`C14N`)**, and **KMS key algorithm** must be compatible.
 - `JCS` refers to JSON Canonicalization Scheme.
 - `RDFC` refers to RDF Dataset Canonicalization.
 - The KMS key must be created with a signing algorithm that matches the selected cryptosuite.
@@ -115,7 +112,7 @@ mvn clean package
   --runtime=java25 \
   --entry-point=WitnessService \
   --trigger-http \
-  --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID,VERIFICATION_METHOD=$VERIFICATION_METHOD"
+  --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID,C14N=$C14N,VERIFICATION_METHOD=$VERIFICATION_METHOD"
 ```
 
 ## Verify
