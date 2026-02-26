@@ -44,6 +44,8 @@ Witnesses provide **cryptographic proofs** that an event existed at a specific t
 * JDK 25
 * Maven 3.9+
 * [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) – Asymmetric Signing (EC or EdDSA).
+* [Google Cloud SDK / gcloud CLI](https://cloud.google.com/sdk/docs/install)
+* Configured GCP project
 
 ### Configuration
 
@@ -107,12 +109,22 @@ mvn clean package
 ### Deployment
  
 ```bash
- gcloud functions deploy witness-service \
+ gcloud functions deploy witness \
   --gen2 \
   --runtime=java25 \
   --entry-point=WitnessService \
   --trigger-http \
   --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING,KMS_KEY_ID=$KMS_KEY_ID,C14N=$C14N,VERIFICATION_METHOD=$VERIFICATION_METHOD"
+```
+
+## Test
+
+Send a POST request with the digest to the deployed Cloud Function:
+
+```bash
+curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
+  -H "Content-Type: application/json" \
+  -d '{"digestMultibase":"zabc123..."}'
 ```
 
 ## Verify
@@ -133,3 +145,10 @@ Combine request data and response data into a single signed JSON document.
   }
 }
 ```
+
+### Notes
+
+* The `digestMultibase` must match the digest of the content you signed.  
+* `verificationMethod` must point to the correct public key (DID or KMS reference) used for signing.  
+* All fields in the `proof` object must remain unchanged for the verification to succeed.  
+* Use a Verifiable Credentials / Data Integrity (VC DI) verifier to validate the signed JSON proof.  
