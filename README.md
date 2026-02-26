@@ -19,12 +19,6 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 
 ## Test Endpoints
 
-* `digestMultibase` must contain canonical digest you want signed, witnessed.
-* `digestMultibase` field must be multibase-encoded. Supported encodings:
-  - Base58BTC
-  - Base64 URL without padding
-* The response will include the signed JSON proof from the witness service.
-
 #### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
 
 `https://us-central1-api-catalog.cloudfunctions.net/red-witness`
@@ -34,6 +28,12 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 TODO
 
 ## Service
+
+* `digestMultibase` must contain canonical digest you want signed, witnessed.
+* `digestMultibase` field must be multibase-encoded. Supported encodings:
+  - Base58BTC
+  - Base64 URL without padding
+* The response will include the signed JSON proof from the witness service.
 
 
 ```bash
