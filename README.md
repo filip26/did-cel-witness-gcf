@@ -25,7 +25,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
   - Base64 URL without padding
 * The response will include the signed JSON proof from the witness service.
 
-#### `ecdsa-jcs-2019`, `256bit`, `region:us-central`, `HSM`
+#### `ecdsa-jcs-2019`, `256bit`, `us-central`, `HSM`
 
 ```bash
 curl -X POST https://us-central1-api-catalog.cloudfunctions.net/red-witness \
@@ -107,15 +107,29 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 - `RDFC` refers to RDF Dataset Canonicalization.
 
 ### IAM Permissions
-Grant these roles to the service account:
-1. `roles/cloudkms.signer` (To sign)
-2. `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
 
+Create a new service account:
+
+```bash
+gcloud iam service-accounts create SA-NAME \
+    --display-name="Witness Function Invoker"
+```
+
+Grant these roles to the service account:
+
+* `roles/cloudkms.signer` (To sign)
+* `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
+
+```bash
+gcloud functions add-invoker-policy-binding FUNCTION_NAME \
+    --region=REGION \
+    --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com"
+```
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --location=$KMS_LOCATION \
   --keyring=$KMS_KEY_RING \
-  --member="serviceAccount:[SA_EMAIL]" \
+  --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudkms.signer"
 ```
 
@@ -123,7 +137,7 @@ gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --location=$KMS_LOCATION \
   --keyring=$KMS_KEY_RING \
-  --member="serviceAccount:[SA_EMAIL]" \
+  --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudkms.viewer"
 ```
   
