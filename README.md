@@ -27,21 +27,20 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 
 #### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
 
-```bash
-curl -X POST https://us-central1-api-catalog.cloudfunctions.net/red-witness \
-  -H "Content-Type: application/json" \
-  -d '{"digestMultibase":"..."}'
-```
+`https://us-central1-api-catalog.cloudfunctions.net/red-witness`
 
 #### `eddsa-rdfc-2022`, `256bit`, `europe-west3`
 
+TODO
+
+## Service
+
+
 ```bash
-curl -X POST https://dsdssdsd.cloudfunctions.net/white-witness \
+curl -X POST ENDPOINT \
   -H "Content-Type: application/json" \
   -d '{"digestMultibase":"..."}'
 ```
-
-## Service
 
 #### Request
 
@@ -115,16 +114,17 @@ gcloud iam service-accounts create SA-NAME \
     --display-name="Witness Function Invoker"
 ```
 
-Grant these roles to the service account:
-
-* `roles/cloudkms.signer` (To sign)
-* `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
-
 ```bash
 gcloud functions add-invoker-policy-binding FUNCTION_NAME \
     --region=REGION \
     --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com"
 ```
+
+Grant these roles to the service account:
+
+* `roles/cloudkms.signer` (To sign)
+* `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
+
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --location=$KMS_LOCATION \
@@ -149,7 +149,7 @@ mvn clean package
 ### Deployment
  
 ```bash
- gcloud functions deploy [ENDPOINT_NAME] \
+ gcloud functions deploy [FUNCTION_NAME] \
   --gen2 \
   --runtime=java25 \
   --source=. \
