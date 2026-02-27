@@ -33,7 +33,7 @@ import jakarta.json.spi.JsonProvider;
  * <li><code>KMS_KEY_ID</code> - The name of the Asymmetric Signing Key.</li>
  * <li><code>KMS_KEY_VERSION</code> - (Optional) The version of the key.
  * Defaults to "1".</li>
- * <li><code>C14N</code> - The canonicalization, JCS or RDFC.</li> 
+ * <li><code>C14N</code> - The canonicalization, JCS or RDFC.</li>
  * </ul>
  */
 public class WitnessService implements HttpFunction {
@@ -57,21 +57,18 @@ public class WitnessService implements HttpFunction {
     private static final CryptoSuite CRYPTOSUITE;
 
     static {
-
         var location = System.getenv("KMS_LOCATION");
         var keyRing = System.getenv("KMS_KEY_RING");
         var keyId = System.getenv("KMS_KEY_ID");
 
         var version = System.getenv().getOrDefault("KMS_KEY_VERSION", "1");
-        var method = System.getenv("VERIFICATION_METHOD");
         var c14n = System.getenv("C14N");
 
-        if (location == null || keyRing == null || keyId == null || method == null || c14n == null) {
+        VERIFICATION_METHOD = System.getenv("VERIFICATION_METHOD");
+
+        if (location == null || keyRing == null || keyId == null || VERIFICATION_METHOD == null || c14n == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
-
-        // keep the input method as JSON string
-        VERIFICATION_METHOD = method;
 
         var project = ServiceOptions.getDefaultProjectId();
 
@@ -157,7 +154,7 @@ public class WitnessService implements HttpFunction {
         if (!Multibase.BASE_58_BTC.isEncoded(digest)
                 && !Multibase.BASE_64_URL.isEncoded(digest)) {
             sendError(response, 400, "Bad Request",
-                    "digestMultibase value must be multibase: base58btc or base64URLnopad ");
+                    "digestMultibase value must be multibase: base58btc or base64URLnopad");
             return;
         }
 
