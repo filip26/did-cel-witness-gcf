@@ -1,5 +1,4 @@
 
-
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,11 +22,9 @@ import jakarta.json.JsonString;
 import jakarta.json.spi.JsonProvider;
 
 /**
- * A Google Cloud Function that provides EdDSA (Ed25519) digital signatures
- * using Google Cloud Key Management Service (KMS). *
- * <p>
- * This implementation leverages Java 25 features and ensures high performance
- * by reusing the KMS client across function invocations. *
+ * A Google Cloud Function that provides digital signatures using Google Cloud
+ * Key Management Service (KMS).
+ * 
  * <h3>Required Environment Variables:</h3>
  * <ul>
  * <li><code>KMS_LOCATION</code> - The GCP region of the KeyRing (e.g.,
@@ -36,6 +33,7 @@ import jakarta.json.spi.JsonProvider;
  * <li><code>KMS_KEY_ID</code> - The name of the Asymmetric Signing Key.</li>
  * <li><code>KMS_KEY_VERSION</code> - (Optional) The version of the key.
  * Defaults to "1".</li>
+ * <li><code>C14N</code> - The canonicalization, JCS or RDFC.</li> 
  * </ul>
  */
 public class WitnessService implements HttpFunction {
