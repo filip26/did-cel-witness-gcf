@@ -150,7 +150,7 @@ public class Templates {
                 .append(JCS_PROOF_PARTS[1]).append(cryptosuite)
                 .append(JCS_PROOF_PARTS[2]).append(nonce)
                 .append(JCS_PROOF_PARTS[3]).append(method)
-                .append(",\"proofValue\":\"").append(signature).append("\"")
+                .append("\",\"proofValue\":\"").append(signature)
                 .append(JCS_PROOF_PARTS[4])
                 .toString();
     }
