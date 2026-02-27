@@ -27,7 +27,9 @@ Endpoints are organized by algorithm, region, and status.
 - Status: Active
 
 #### `eddsa-rdfc-2022`, `256bit`, `europe-west3`
-- Status: Coming Soon
+- `https://europe-west3-api-catalog.cloudfunctions.net/white-witness`
+- Verification Method: `did:key` (used for simplicity)
+- Status: Active
 
 **Note:** The test endpoints are hosted on GCloud’s free tier and automatically shuts down during periods of inactivity. Consequently, the first request after inactivity may experience a brief delay while the service starts.
 
