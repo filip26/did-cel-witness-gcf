@@ -19,13 +19,17 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 
 ## Test Endpoints
 
-#### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
+Endpoints are organized by algorithm, region, and status.
 
-`https://us-central1-api-catalog.cloudfunctions.net/red-witness`
+#### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
+- [https://us-central1-api-catalog.cloudfunctions.net/red-witness](https://us-central1-api-catalog.cloudfunctions.net/red-witness)  
+- Verification Method: `did:key` (used for simplicity)  
+- Status: Active
 
 #### `eddsa-rdfc-2022`, `256bit`, `europe-west3`
+- Status: Coming Soon
 
-TODO
+**Note:** The test endpoints are hosted on GCloud’s free tier and automatically shuts down during periods of inactivity. Consequently, the first request after inactivity may experience a brief delay while the service starts.
 
 ## Service
 
@@ -200,3 +204,7 @@ curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION-NAME \
 * All fields in the `proof` object must remain unchanged for the verification to succeed.  
 * Use a Verifiable Credentials / Data Integrity (VC DI) verifier to validate the signed JSON proof.  
 
+## 💼 Commercial Support
+
+Commercial support and consulting are available.
+For inquiries, please contact: filip26@gmail.com
