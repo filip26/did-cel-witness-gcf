@@ -22,7 +22,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 Endpoints are organized by algorithm, region, and status.
 
 #### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
-- [https://us-central1-api-catalog.cloudfunctions.net/red-witness](https://us-central1-api-catalog.cloudfunctions.net/red-witness)  
+- `https://us-central1-api-catalog.cloudfunctions.net/red-witness`
 - Verification Method: `did:key` (used for simplicity)  
 - Status: Active
 
@@ -68,14 +68,14 @@ curl -X POST ENDPOINT \
 }
 ```
 
-## Build & Deploy
+## Deploy
 
 ### Prerequisites
+
+* Configured GCP project
 * JDK 25
-* Maven 3.9+
 * [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) – Asymmetric Signing (EC or EdDSA).
 * [Google Cloud SDK / gcloud CLI](https://cloud.google.com/sdk/docs/install)
-* Configured GCP project
 
 ### Configuration
 
@@ -118,12 +118,6 @@ gcloud iam service-accounts create SA-NAME \
     --display-name="Witness Function Invoker"
 ```
 
-```bash
-gcloud functions add-invoker-policy-binding FUNCTION-NAME \
-    --region=REGION \
-    --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com"
-```
-
 Grant these roles to the service account:
 
 * `roles/cloudkms.signer` (To sign)
@@ -144,12 +138,7 @@ gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudkms.viewer"
 ```
-  
-### Build
-```bash
-mvn clean package
-```
-  
+    
 ### Deployment
  
 ```bash
