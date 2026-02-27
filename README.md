@@ -115,7 +115,7 @@ gcloud iam service-accounts create SA-NAME \
 ```
 
 ```bash
-gcloud functions add-invoker-policy-binding FUNCTION_NAME \
+gcloud functions add-invoker-policy-binding FUNCTION-NAME \
     --region=REGION \
     --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com"
 ```
@@ -149,7 +149,7 @@ mvn clean package
 ### Deployment
  
 ```bash
- gcloud functions deploy [FUNCTION_NAME] \
+ gcloud functions deploy FUNCTION-NAME \
   --gen2 \
   --runtime=java25 \
   --source=. \
@@ -171,7 +171,7 @@ If deploying a public witness service without authentication, you can add the fl
 * Send a POST request with the digest to the deployed Cloud Function:
 
 ```bash
-curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/witness \
+curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION-NAME \
   -H "Content-Type: application/json" \
   -d '{"digestMultibase":"..."}'
 ```
