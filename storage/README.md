@@ -11,9 +11,14 @@ The `did:cel` method supports a hybrid discovery model. While the `storage` para
 ### Algorithm
 To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
-1. Extract the Commitment: Parse the `method-specific-id` from the DID string to obtain `initial-event-log-hash`.
+1. Extract the Commitment: Parse the `method-specific-id` from the `did:cel` to obtain `initial-event-log-hash`.
 2. Locate the Log: Retrieve the Event Log array from a distributed registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MAY fetch the resource at `[URL][method-specific-id]`.
-3. Verify Inception: Perform a JCS (JSON Canonicalization Scheme) serialization of the first entry in the log, `sha3-256(JCS(E_0))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
+3. Verify Inception: 
+    3.0. Extract the create event log entry.
+    3.1. Extract initial `didDocument` from the create event.
+    3.2. The `didDocument.id` and `assertionMethod.controller` field MUST exactly match the `did:cel` which is being resolved.
+    3.3. Recreate `initialDidDocument` by Removing the `id` and `assertionMethod.controller` fields from the `didDocument`
+    3.4. Perform a JCS (JSON Canonicalization Scheme) serialization of the `initialDidDocument`, `sha3-256(JCS(initialDidDocument))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
 4. Verify Integrity: Iterate through subsequent events ($E_n \dots E_1$), in reverse chronological order, starting with the newest entry, allowing `previousEventHash` to be reused if already cached or computed as needed. For each event, verify that:
     - The `previousEventHash` matches the `sha3-256` hash of the previous event's JCS representation.
     - The event is signed by a key authorized in the state established by the previous event.
@@ -23,7 +28,6 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
     - Continuity: Any gap in the heartbeat chain that exceeds the allowed threshold—without an accompanying deactivation or authorized suspension event—MUST result in a validation failure. This ensures that a storage provider cannot omit intermediate events or "freeze" the state in the past.
 6. Project State: Apply the cumulative state changes defined in the verified log to construct the final DID Document.
 7. Verify Origin: 
-    - The resulting DID Document contains an id field exactly matching the `initial-event-log-hash`.
     - If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
 
 ### Immutability and Caching
