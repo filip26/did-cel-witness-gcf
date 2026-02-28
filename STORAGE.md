@@ -105,11 +105,11 @@ Once uploaded, the `storage` parameter in the DID URL should point to the bucket
 `did:cel:method-specific-id?storage=https://storage.googleapis.com/did-cel-log/`
 
 
-# Validation of Resolution
+## Validation of Resolution
 
 To ensure the storage and resolution are correctly configured, the following validation steps should be performed.
 
-## Response Verification
+### Response Verification
 A compliant resolver fetching the log receives a `200 OK` status with `Content-Type: application/json`.
 
 1.  **Direct Fetch Test:**
@@ -117,10 +117,10 @@ A compliant resolver fetching the log receives a `200 OK` status with `Content-T
     curl -H "Accept: application/json" -I https://storage.googleapis.com/[BUCKET]/[DID_SUFFIX]
     ```
 
-## Cryptographic Integrity Check
+### Cryptographic Integrity Check
 The validation of the "Read" method is strictly cryptographic. A successful resolution satisfy:
 1.  **Hash Equality:** `sha3-256(JCS(Log[0]))` equals the `method-specific-id`.
 2.  **Signature Validity:** The signature on the most recent event in the log corresponds to a public key defined in the active state.
 
-## DID Document Projection
+### DID Document Projection
 The resulting DID Document contains an `id` field exactly matching the input `did:cel` string, including the `storage` parameter used for discovery, as this parameter is part of the identifier's resolvable URL.
