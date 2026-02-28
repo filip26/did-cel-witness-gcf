@@ -19,7 +19,7 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
    3. The `didDocument.id` and `didDocument.assertionMethod.controller` fields MUST exactly match the `did:cel` which is being resolved.
    4. Recreate `initialDidDocument` by removing the `id` and `assertionMethod.controller` fields from the `didDocument`
    5. Perform `multihash(sha3-256(JCS(initialDidDocument)))`. The result value MUST exactly match the `initialDidDocumentHash` extracted from the DID.
-5. Verify Integrity: Iterate through subsequent events ($E_n \dots E_0$), in reverse chronological order, starting with the newest entry, allowing `previousEventHash` to be reused if already cached or computed as needed. For each event, verify that:
+5. Verify Integrity: Iterate through subsequent events ($E_n \dots E_0$), in reverse chronological order, starting with the newest entry, allowing previous verification to be reused if already cached or computed as needed. For each event, verify that:
     - For $E_n$ where $n \gt 1$, the `previousEventHash` MUST match the `sha3-256` hash of the previous event's document hash.
     - The event is signed by a key authorized in the state established by the previous event.
     - Witness Verification: The resolver MUST verify that the event contains a sufficient number of valid witness signatures. The specific threshold and selection of required witnesses are determined by application-level logic based on the trust requirements of the relying party.
