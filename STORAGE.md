@@ -28,12 +28,6 @@ The `did:cel` event log is a cryptographically immutable ledger. Because each ev
 
 Resolvers SHOULD cache verified events, event logs, locally. Once an event is validated against the inception commitment and the chain of signatures, it never needs to be re-verified or re-fetched.
 
-### Storage Parameter
-
-* **Key:** `storage`
-* **Value:** A valid URI (typically `https://...`) pointing to a directory or service.
-* **Resolution Rule:** The resolver appends the `method-specific-id` to the `storage` value to form the final fetch URL.
-
 ### `storage`, `CelStorageService`, and URL Construction
 
 The `did:cel` resolver uses a simple string concatenation rule to find logs. The final fetch URL is formed by appending the `method-specific-id` directly to the storage URL.
@@ -52,6 +46,11 @@ Native IPFS (Content-Addressable):
   * `storage`: `ipfs://bafybeigdy.../`
   * URL: `ipfs://bafybeigdy.../zW1b...`
 
+#### DID URL Parameter
+
+* **Key:** `storage`
+* **Value:** A valid URI (typically `https://...`) pointing to a directory or service.
+* **Resolution Rule:** The resolver appends the `method-specific-id` to the `storage` value to form the final fetch URL.
 
 ## 6. Infrastructure and Manual Setup (GCloud)
 
