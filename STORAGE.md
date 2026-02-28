@@ -86,13 +86,13 @@ To prevent the enumeration of all DIDs stored within a registry, the storage buc
         --role="projects/[PROJECT_ID]/roles/celLogViewer"
    ```
   2.3.  **Resulting Behavior:**
-   * Authorized Access: `GET /[method-specific-id]` returns the log.
+   * Public Access: `GET /[method-specific-id]` returns the log.
    * Unauthorized Discovery: `GET /` (root listing) returns a `403 Forbidden` response.
     
 ## Manual Log Upload
 The initial log must be formatted as a JSON array containing the inception event ($E_0$) where the blob name is `method-specific-id`.
 
-1.  **Naming Convention:** If the DID is `did:cel:zW1bVJv...`, the filename must be `zW1bVJv...`.
+1.  **Naming Convention:** If the DID is `did:cel:zW1bVJv...`, the blob name must be `zW1bVJv...`.
 2.  **Upload Command:**
     ```bash
     gcloud storage cp log.json gs://[STORAGE]/[method-specific-id]
@@ -107,12 +107,12 @@ The initial log must be formatted as a JSON array containing the inception event
 
 A resolver fetching the log receives a `200 OK` status with `Content-Type: application/json`.
 
-1.  **Direct Fetch Test:**
-    ```bash
-    curl -H "Accept: application/json" -I https://storage.googleapis.com/[BUCKET]/[method-specific-id]
-    ```
+  **Direct Fetch Test:**
+  ```bash
+  curl -H "Accept: application/json" -I https://storage.googleapis.com/[STORAGE]/[method-specific-id]
+  ```
 
 ## DID URL Construction
 Once uploaded, the `storage` parameter in the DID URL may point to the bucket's public storage base:
-`did:cel:method-specific-id?storage=https://storage.googleapis.com/[BUCKET]/`
+`did:cel:method-specific-id?storage=https://storage.googleapis.com/[STORAGE]/`
 
