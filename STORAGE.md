@@ -39,8 +39,8 @@ Path-Based (Static Hosting):
   * URL: `https://storage.googleapis.com/did-cel-log/zW1b...`
 
 Query-Based (Dynamic API):
-  * `storage`: `https://example/resolve?q=`
-  * URL: `https://example/resolve?q=zW1b...`
+  * `storage`: `https://example/didcel?msid=`
+  * URL: `https://example/didcel?msid=zW1b...`
 
 Native IPFS (Content-Addressable):
   * `storage`: `ipfs://bafybeigdy.../`
