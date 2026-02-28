@@ -11,7 +11,7 @@ The `did:cel` method supports a hybrid discovery model. While the `storage` para
 ### Algorithm
 To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
-1. Extract the Commitment: Parse the `method-specific-id = multibase(base58btc, multihash(initialDidDocumentHash))` from the `did:cel` to obtain `initialDidDocumentHash`. 
+1. Extract the Commitment: Parse the `method-specific-id = multibase(base58btc, initialDidDocumentHash)` from the `did:cel` to obtain `initialDidDocumentHash`. 
 2. Locate the Log: Retrieve the Event Log array from a distributed registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MAY fetch the resource at `[URL][method-specific-id]`.
 3. Verify Inception:
    1. Extract the create event log entry.
