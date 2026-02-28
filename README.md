@@ -194,6 +194,14 @@ curl -X POST https://REGION-PROJECT_ID.cloudfunctions.net/FUNCTION-NAME \
 * All fields in the `proof` object must remain unchanged for the verification to succeed.  
 * Use a Verifiable Credentials / Data Integrity (VC DI) verifier to validate the signed JSON proof.  
 
+## 🤝 Contributing
+
+Contributions of all kinds are welcome - whether it’s code, documentation, testing, or community support! Please open PR or issue to get started.
+
+## 📚 Resources
+
+- [The `did:cel` Method Specification](https://w3c-ccg.github.io/did-cel-spec/)
+
 ## 💼 Commercial Support
 
 Commercial support and consulting are available.

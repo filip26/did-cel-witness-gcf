@@ -10,7 +10,7 @@ The `did:cel` method supports a hybrid discovery model. While the `storage` para
 To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
 1.  Extract the Commitment: Parse the `method-specific-id` from the DID string to obtain `initial-event-log-hash`.
-2.  Locate the Log: Retrieve the Event Log array from a registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MUST fetch the resource at `[URL][method-specific-id]`.
+2.  Locate the Log: Retrieve the Event Log array from a distributed registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MAY fetch the resource at `[URL][method-specific-id]`.
 3.  Verify Inception: Perform a JCS (JSON Canonicalization Scheme) serialization of the first entry ($E_0$) in the log. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
 4.  Validate Chain Integrity: Iterate through subsequent events ($E_1 \dots E_n$). For each event, verify that:
     * The `predecessor` field matches the hash of the previous event's JCS representation.
@@ -32,7 +32,7 @@ The bucket acts as the static repository for the DID Event Logs. A single bucket
 
 1.  **Create Bucket:** Initialize a bucket in a preferred region.
     ```bash
-    gcloud storage buckets create gs://did-cel-log --location=[REGION]
+    gcloud storage buckets create gs://[STORAGE] --location=[REGION]
     ```
 2.  **Enable Public Access:**  
 To prevent the enumeration of all DIDs stored within a registry, the storage bucket MUST be configured to allow "Direct Object Fetch" while disabling "Bucket Listing."
@@ -46,7 +46,7 @@ To prevent the enumeration of all DIDs stored within a registry, the storage buc
         --permissions=storage.objects.get
    ``` 
    ```bash
-   gcloud storage buckets add-iam-policy-binding gs://did-cel-log \
+   gcloud storage buckets add-iam-policy-binding gs://[STORAGE] \
         --member="allUsers" \
         --role="projects/[PROJECT_ID]/roles/celLogViewer"
    ```
@@ -60,11 +60,11 @@ The initial log must be formatted as a JSON array containing the inception event
 1.  **Naming Convention:** If the DID is `did:cel:zW1bVJv...`, the filename must be `zW1bVJv...`.
 2.  **Upload Command:**
     ```bash
-    gcloud storage cp log.json gs://did-cel-log/[method-specific-id]
+    gcloud storage cp log.json gs://[STORAGE]/[method-specific-id]
     ```
 3.  **Metadata Configuration:** Ensure the `Content-Type` is set to `application/json` to prevent resolution errors during the fetch phase.
     ```bash
-    gcloud storage objects update gs://did-cel-log/[method-specific-id] \
+    gcloud storage objects update gs://[STORAGE]/[method-specific-id] \
         --content-type="application/json"
     ```
 
