@@ -19,7 +19,7 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 5. Verify Liveness (Heartbeat Chain): The resolver MUST verify a contiguous chain of heartbeat proofs throughout the log duration. 
     - Frequency Match: Heartbeats MUST occur at the interval frequency defined in the DID configuration or method defaults.
     - Continuity: Any gap in the heartbeat chain that exceeds the allowed threshold—without an accompanying deactivation or authorized suspension event—MUST result in a validation failure. This ensures that a storage provider cannot omit intermediate events or "freeze" the state in the past.
-6. Project State: Apply the cumulative state changes (key additions, rotations, or service updates) defined in the verified log to construct the final DID Document.
+6. Project State: Apply the cumulative state changes defined in the verified log to construct the final DID Document.
 7. Validate Origin: 
     - The resulting DID Document contains an id field exactly matching the `initial-event-log-hash`.
     - If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
@@ -57,7 +57,7 @@ Native IPFS (Content-Addressable):
 
 ---
 
-# `CellStorageService` | GCS
+# GCS `CellStorageService` Endpoint
 
 Manual provisioning of Google Cloud Storage resources to serve as the `CellStorageService`. This section describes the manual process for initializing storage and uploading the initial log.
 
