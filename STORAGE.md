@@ -39,23 +39,20 @@ To prevent the enumeration of all DIDs stored within a registry, the storage buc
 
   2.1.  **Selection of Role:** A custom IAM role (e.g., `celLogViewer`) SHOULD be defined at the project level. This role MUST contain the `storage.objects.get` permission and MUST exclude the `storage.objects.list` permission.
   2.2.  **Configuration Command:**
-  
-    ```bash
-    gcloud iam roles create celLogViewer \
+   ```bash
+   gcloud iam roles create celLogViewer \
         --project=[PROJECT_ID] \
         --title="did:cel Log Viewer" \
         --permissions=storage.objects.get
-    ```
-    ```bash
-    gcloud storage buckets add-iam-policy-binding gs://did-cel-log \
+   ``` 
+   ```bash
+   gcloud storage buckets add-iam-policy-binding gs://did-cel-log \
         --member="allUsers" \
         --role="projects/[PROJECT_ID]/roles/celLogViewer"
-    ```
-    
+   ```
   2.3.  **Resulting Behavior:**
-  
-    * Authorized Access: `GET /[method-specific-id]` returns the log.
-    * Unauthorized Discovery: `GET /` (root listing) returns a `403 Forbidden` response.
+   * Authorized Access: `GET /[method-specific-id]` returns the log.
+   * Unauthorized Discovery: `GET /` (root listing) returns a `403 Forbidden` response.
     
 ### 6.2 Manual Log Upload
 The initial log must be formatted as a JSON array containing the inception event ($E_0$). The filename MUST match the `method-specific-id`.
