@@ -28,21 +28,19 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
 The `did:cel` resolver uses a simple string concatenation rule to find logs. The final fetch URL is formed by appending the `method-specific-id` directly to the storage URL.
 
-- **Path-Based (Static Hosting):**
-   `storage`: `https://storage.googleapis.com/did-cel-log/`
-   URL: `https://storage.googleapis.com/did-cel-log/zW1b...`
+**Examples**
 
-- **Query-Based (Dynamic API):**
-   `storage`: `https://example/resolve?q=`
-   Fetch URL: `https://example/resolve?q=zW1b...`
+Path-Based (Static Hosting):
+  * `storage`: `https://storage.googleapis.com/did-cel-log/`
+  * URL: `https://storage.googleapis.com/did-cel-log/zW1b...`
 
-- **Native IPFS (Content-Addressable):**
-   `storage`: `ipfs://bafybeigdy.../`
-   Fetch URL: `ipfs://bafybeigdy.../zW1b...`
+Query-Based (Dynamic API):
+  * `storage`: `https://example/resolve?q=`
+  * URL: `https://example/resolve?q=zW1b...`
 
-- **Native IPNS (Mutable Pointer):**
-   `storage`: `ipns://k51qzi5ujm.../`
-   URL: `ipns://k51qzi5ujm.../zW1b...`
+Native IPFS (Content-Addressable):
+  * `storage`: `ipfs://bafybeigdy.../`
+  * URL: `ipfs://bafybeigdy.../zW1b...`
 
 ### Immutability and Caching
 
