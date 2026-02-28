@@ -20,14 +20,7 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
     - Frequency Match: Heartbeats MUST occur at the interval frequency defined in the DID configuration or method defaults.
     - Continuity: Any gap in the heartbeat chain that exceeds the allowed threshold—without an accompanying deactivation or authorized suspension event—MUST result in a validation failure. This ensures that a storage provider cannot omit intermediate events or "freeze" the state in the past.
 6. Project State: Apply the cumulative state changes (key additions, rotations, or service updates) defined in the verified log to construct the final DID Document.
-7. Validate Origin: If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved storage service within the `service` section of the assembled DID Document.
-
-4. Validate Chain Integrity: Iterate through subsequent events ($E_1 \dots E_n$). For each event, verify that:
-    * The `previousEventHash` matches the hash of the previous event's JCS representation.
-    * The event is signed by a key authorized in the state established by the previous event.
-    * Witness Verification: The resolver MUST verify that the event contains a sufficient number of valid witness signatures. The specific threshold and selection of required witnesses are determined by application-level logic based on the trust requirements of the relying party.
-5. Project State: Apply the cumulative state changes (key additions, rotations, or service updates) defined in the verified log to construct the final DID Document.
-6. Validate Origin: If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
+7. Validate Origin: If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
 
 ### Storage Parameter
 
