@@ -16,13 +16,23 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
     * The `predecessor` field matches the hash of the previous event's JCS representation.
     * The event is signed by a key authorized in the state established by the previous event.
 5. Project State: Apply the cumulative state changes (key additions, rotations, or service updates) defined in the verified log to construct the final DID Document.
-6. Validate Origin: If the event log was retrieved by using a provided storage URL parameter, then that exact URL MUST be listed as an approved storage service within the service section of the assembled DID Document.
+6. Validate Origin: If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved storage service within the service section of the assembled DID Document.
 
 ### Storage Parameter
 
 * **Key:** `storage`
 * **Value:** A valid URI (typically `https://...`) pointing to a directory or service.
 * **Resolution Rule:** The resolver appends the `method-specific-id` to the `storage` value to form the final fetch URL.
+
+### Immutability and Caching
+
+The `did:cel` event log is a cryptographically immutable ledger. Because each event $E_n$ is linked via the hash of its predecessor $E_{n-1}$, the log functions as a tamper-evident chain. 
+
+Implementations are encouraged to leverage this architecture through the following practices:
+
+- Persistent Caching: Resolvers SHOULD cache verified events locally. Once an event is validated against the inception commitment and the chain of signatures, it never needs to be re-verified or re-fetched.
+- Differential Updates: When resolving a DID, a resolver with a cached log only needs to fetch events subsequent to its local head. This minimizes bandwidth and significantly improves resolution speed.
+- Network Resilience: Local caching ensures that the DID remains resolvable even if the primary `storage` provider is temporarily unreachable, supporting the decentralized and hybrid nature of the `did:cel` method.
 
 ## 6. Infrastructure and Manual Setup (GCloud)
 
