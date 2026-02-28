@@ -13,21 +13,21 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
 1. Extract the Commitment: Parse the `method-specific-id` from the `did:cel` to obtain `initial-event-log-hash`.
 2. Locate the Log: Retrieve the Event Log array from a distributed registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MAY fetch the resource at `[URL][method-specific-id]`.
-3. Verify Inception: 
-    3.0. Extract the create event log entry.
-    3.1. Extract initial `didDocument` from the create event.
-    3.2. The `didDocument.id` and `assertionMethod.controller` field MUST exactly match the `did:cel` which is being resolved.
-    3.3. Recreate `initialDidDocument` by Removing the `id` and `assertionMethod.controller` fields from the `didDocument`
-    3.4. Perform a JCS (JSON Canonicalization Scheme) serialization of the `initialDidDocument`, `sha3-256(JCS(initialDidDocument))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
-4. Verify Integrity: Iterate through subsequent events ($E_n \dots E_1$), in reverse chronological order, starting with the newest entry, allowing `previousEventHash` to be reused if already cached or computed as needed. For each event, verify that:
+3. Verify Inception:
+   1. Extract the create event log entry.
+   2. Extract initial `didDocument` from the create event.
+   3. The `didDocument.id` and `assertionMethod.controller` field MUST exactly match the `did:cel` which is being resolved.
+   4. Recreate `initialDidDocument` by Removing the `id` and `assertionMethod.controller` fields from the `didDocument`
+   5. Perform a JCS (JSON Canonicalization Scheme) serialization of the `initialDidDocument`, `sha3-256(JCS(initialDidDocument))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
+5. Verify Integrity: Iterate through subsequent events ($E_n \dots E_1$), in reverse chronological order, starting with the newest entry, allowing `previousEventHash` to be reused if already cached or computed as needed. For each event, verify that:
     - The `previousEventHash` matches the `sha3-256` hash of the previous event's JCS representation.
     - The event is signed by a key authorized in the state established by the previous event.
     - Witness Verification: The resolver MUST verify that the event contains a sufficient number of valid witness signatures. The specific threshold and selection of required witnesses are determined by application-level logic based on the trust requirements of the relying party.
-5. Verify Liveness & Temporal Continuity: The resolver MUST verify a contiguous chain of heartbeat proofs throughout the log duration. 
+6. Verify Liveness & Temporal Continuity: The resolver MUST verify a contiguous chain of heartbeat proofs throughout the log duration. 
     - Frequency Match: Heartbeats MUST occur at the interval frequency defined in the DID configuration or method defaults.
     - Continuity: Any gap in the heartbeat chain that exceeds the allowed threshold—without an accompanying deactivation or authorized suspension event—MUST result in a validation failure. This ensures that a storage provider cannot omit intermediate events or "freeze" the state in the past.
-6. Project State: Apply the cumulative state changes defined in the verified log to construct the final DID Document.
-7. Verify Origin: 
+7. Project State: Apply the cumulative state changes defined in the verified log to construct the final DID Document.
+8. Verify Origin: 
     - If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
 
 ### Immutability and Caching
