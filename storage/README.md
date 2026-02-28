@@ -67,6 +67,8 @@ Native IPFS (Content-Addressable):
 
 Manual provisioning of Google Cloud Storage resources to serve as the `CellStorageService`. This section describes the manual process for initializing storage and uploading the initial log.
 
+Although GCS provides high availability and durability, within the `did:cel` ecosystem it is recommended to distribute logs across a diverse set of storage provider to reduce reliance on any single infrastructure vendor. A GCS-backed `CellStorageService` can be one such provider, complementing others to improve redundancy, resilience, and data accessibility.
+
 ## Creating the Storage Bucket
 The bucket acts as the static repository for the DID Event Logs. A single bucket can host any number of `did:cel` logs as flat files.
 
