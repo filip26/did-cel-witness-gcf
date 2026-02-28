@@ -11,8 +11,8 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
 1. Extract the Commitment: Parse the `method-specific-id` from the DID string to obtain `initial-event-log-hash`.
 2. Locate the Log: Retrieve the Event Log array from a distributed registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MAY fetch the resource at `[URL][method-specific-id]`.
-3. Verify Inception: Perform a JCS (JSON Canonicalization Scheme) serialization of the first entry in the log, `sha3-256(JCS(`$E_0$`))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
-4. Validate Chain Integrity: Iterate through subsequent events ($E_1 \dots E_n$). For each event, verify that:
+3. Verify Inception: Perform a JCS (JSON Canonicalization Scheme) serialization of the first entry in the log, `sha3-256(JCS(E_0))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
+4. Validate Chain Integrity: Iterate through subsequent events ($E_n \dots E_1$), in reverse chronological order, starting with the newest entry, allowing `previousEventHash` to be reused if already cached or computed as needed. For each event, verify that:
     - The `previousEventHash` matches the `sha3-256` hash of the previous event's JCS representation.
     - The event is signed by a key authorized in the state established by the previous event.
     - Witness Verification: The resolver MUST verify that the event contains a sufficient number of valid witness signatures. The specific threshold and selection of required witnesses are determined by application-level logic based on the trust requirements of the relying party.
