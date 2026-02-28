@@ -11,8 +11,9 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 
 1. Extract the Commitment: Parse the `method-specific-id` from the DID string to obtain `initial-event-log-hash`.
 2. Locate the Log: Retrieve the Event Log array from a distributed registry or a location specified by the `storage` parameter. If a `storage` URL is provided, the resolver MAY fetch the resource at `[URL][method-specific-id]`.
-3. Verify Inception: Perform a JCS (JSON Canonicalization Scheme) serialization of the first entry ($E_0$) in the log. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
+3. Verify Inception: Perform a JCS (JSON Canonicalization Scheme) serialization of the first entry in the log, `sha3-256(JCS($E_0$))`. The `sha3-256` hash of this value MUST exactly match the `initial-event-log-hash` extracted from the DID.
 4. Validate Chain Integrity: Iterate through subsequent events ($E_1 \dots E_n$). For each event, verify that:
+    - 
     - The `previousEventHash` matches the `sha3-256` hash of the previous event's JCS representation.
     - The event is signed by a key authorized in the state established by the previous event.
     - Witness Verification: The resolver MUST verify that the event contains a sufficient number of valid witness signatures. The specific threshold and selection of required witnesses are determined by application-level logic based on the trust requirements of the relying party.
@@ -20,7 +21,9 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
     - Frequency Match: Heartbeats MUST occur at the interval frequency defined in the DID configuration or method defaults.
     - Continuity: Any gap in the heartbeat chain that exceeds the allowed threshold—without an accompanying deactivation or authorized suspension event—MUST result in a validation failure. This ensures that a storage provider cannot omit intermediate events or "freeze" the state in the past.
 6. Project State: Apply the cumulative state changes (key additions, rotations, or service updates) defined in the verified log to construct the final DID Document.
-7. Validate Origin: If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
+7. Validate Origin: 
+  - The resulting DID Document contains an id field exactly matching the `initial-event-log-hash`.
+  - If the event log was retrieved by using a provided `storage` URL parameter, then that exact URL MUST be listed as an approved `CelStorageService` within the service section of the assembled DID Document.
 
 ### Immutability and Caching
 
@@ -87,7 +90,7 @@ To prevent the enumeration of all DIDs stored within a registry, the storage buc
    * Unauthorized Discovery: `GET /` (root listing) returns a `403 Forbidden` response.
     
 ## Manual Log Upload
-The initial log must be formatted as a JSON array containing the inception event ($E_0$) where the filename is `method-specific-id`.
+The initial log must be formatted as a JSON array containing the inception event ($E_0$) where the blob name is `method-specific-id`.
 
 1.  **Naming Convention:** If the DID is `did:cel:zW1bVJv...`, the filename must be `zW1bVJv...`.
 2.  **Upload Command:**
@@ -100,27 +103,16 @@ The initial log must be formatted as a JSON array containing the inception event
         --content-type="application/json"
     ```
 
-## Resolution URI Construction
-Once uploaded, the `storage` parameter in the DID URL should point to the bucket's public storage base:
-`did:cel:method-specific-id?storage=https://storage.googleapis.com/did-cel-log/`
-
-
 ## Validation of Resolution
 
-To ensure the storage and resolution are correctly configured, the following validation steps should be performed.
-
-### Response Verification
-A compliant resolver fetching the log receives a `200 OK` status with `Content-Type: application/json`.
+A resolver fetching the log receives a `200 OK` status with `Content-Type: application/json`.
 
 1.  **Direct Fetch Test:**
     ```bash
-    curl -H "Accept: application/json" -I https://storage.googleapis.com/[BUCKET]/[DID_SUFFIX]
+    curl -H "Accept: application/json" -I https://storage.googleapis.com/[BUCKET]/[method-specific-id]
     ```
 
-### Cryptographic Integrity Check
-The validation of the "Read" method is strictly cryptographic. A successful resolution satisfy:
-1.  **Hash Equality:** `sha3-256(JCS(Log[0]))` equals the `method-specific-id`.
-2.  **Signature Validity:** The signature on the most recent event in the log corresponds to a public key defined in the active state.
+## DID URL Construction
+Once uploaded, the `storage` parameter in the DID URL may point to the bucket's public storage base:
+`did:cel:method-specific-id?storage=https://storage.googleapis.com/[BUCKET]/`
 
-### DID Document Projection
-The resulting DID Document contains an `id` field exactly matching the input `did:cel` string, including the `storage` parameter used for discovery, as this parameter is part of the identifier's resolvable URL.
