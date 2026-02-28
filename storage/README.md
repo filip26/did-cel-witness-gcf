@@ -1,4 +1,6 @@
 
+_The `did:cel` resolution, the read method is unofficial and provided for experimental purposes._
+
 ## Resolution (Read)
 
 The resolution of a `did:cel` identifier is the process of retrieving and validating its event log to produce a compliant DID Document. This method is self-certifying and registry-agnostic, relying on the cryptographic integrity of the log's inception.
