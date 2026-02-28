@@ -24,6 +24,26 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
 * **Value:** A valid URI (typically `https://...`) pointing to a directory or service.
 * **Resolution Rule:** The resolver appends the `method-specific-id` to the `storage` value to form the final fetch URL.
 
+### `storage`, `CelStorageService`, and URL Construction
+
+The `did:cel` resolver uses a simple string concatenation rule to find logs. The final fetch URL is formed by appending the `method-specific-id` directly to the storage URL.
+
+- **Path-Based (Static Hosting):**
+    `storage`: `https://storage.googleapis.com/did-cel-log/`
+    Fetch URL: `https://storage.googleapis.com/did-cel-log/zW1b...`
+
+- **Query-Based (Dynamic API):**
+    `storage`: `https://example/resolve?q=`
+    Fetch URL: `https://example/resolve?q=zW1b...`
+
+- **Native IPFS (Content-Addressable):**
+    `storage`: `ipfs://bafybeigdy.../`
+    Fetch URL: `ipfs://bafybeigdy.../zW1b...`
+
+- **Native IPNS (Mutable Pointer):**
+    `storage`: `ipns://k51qzi5ujm.../`
+    Fetch URL: `ipns://k51qzi5ujm.../zW1b...`
+
 ### Immutability and Caching
 
 The `did:cel` event log is a cryptographically immutable ledger. Because each event $E_n$ is linked via the hash of its predecessor $E_{n-1}$, the log functions as a tamper-evident chain. 
