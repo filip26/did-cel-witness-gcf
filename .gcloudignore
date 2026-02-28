@@ -17,7 +17,8 @@
 .classpath
 .settings
 .project
-README.md
+*.md
+*.json
 LICENSE
 
 # Target directory for maven builds

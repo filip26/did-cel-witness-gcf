@@ -75,9 +75,8 @@ curl -X POST ENDPOINT \
 ### Prerequisites
 
 * Configured GCP project
-* JDK 25
-* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) – Asymmetric Signing (EC or EdDSA).
 * [Google Cloud SDK / gcloud CLI](https://cloud.google.com/sdk/docs/install)
+* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) - Asymmetric Signing (EC or EdDSA).
 
 ### Configuration
 
