@@ -65,7 +65,7 @@ Native IPFS (Content-Addressable):
 
 # GCS `CelStorageService` Endpoint
 
-Manual provisioning of Google Cloud Storage resources to serve as the `CelStorageService`. This section describes the manual process for initializing storage and uploading the initial log.
+Manual provisioning of Google Cloud Storage resources to serve as the `CelStorageService`. This section describes the manual process for initializing storage, automated management, and manual upload of the `did:cel` event log.
 
 Although GCS provides high availability and durability, within the `did:cel` ecosystem it is recommended to distribute logs across a diverse set of storage provider to reduce reliance on any single infrastructure vendor. A GCS-backed `CelStorageService` can be one such provider, complementing others to improve redundancy, resilience, and data accessibility.
 
@@ -96,13 +96,17 @@ To prevent the enumeration of all DIDs stored within a registry, the storage buc
    * Public Access: `GET /[method-specific-id]` returns the log.
    * Unauthorized Discovery: `GET /` (root listing) returns a `403 Forbidden` response.
     
+## Automated Log Management
+
+TBD GC managed did:cel <-> KMS key pair
+    
 ## Manual Log Upload
-The initial log must be formatted as a JSON array containing the inception event ($E_0$) where the blob name is `method-specific-id`.
+The `did:cel` event log must be formatted as a JSON array containing events ($E_0 \dots E_n$) where the blob name is `method-specific-id`.
 
 1.  **Naming Convention:** If the DID is `did:cel:zW1bVJv...`, the blob name must be `zW1bVJv...`.
 2.  **Upload Command:**
     ```bash
-    gcloud storage cp log.json gs://[STORAGE]/[method-specific-id]
+    gcloud storage cp my-did-cel-log.json gs://[STORAGE]/[method-specific-id]
     ```
 3.  **Metadata Configuration:** Ensure the `Content-Type` is set to `application/json` to prevent resolution errors during the fetch phase.
     ```bash
