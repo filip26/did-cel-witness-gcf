@@ -4,14 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.apicatalog</groupId>
-	<artifactId>iron-did-cel-witness-service</artifactId>
+	<artifactId>iron-did-cel-create-service</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>Iron did:cel Witness Service</name>
+	<name>Iron did:cel Create Service</name>
 
 	<description>
-		An implementation of HTTP-triggered Google Cloud Run Functions providing
-		did:cel Witness endpoint using Google Cloud KMS.
+An HTTP-triggered Google Cloud Run service exposing an endpoint to create did:cel identifiers secured and managed using Google Cloud KMS.
 	</description>
 
 	<url>https://github.com/filip26/iron-did-cel-witness</url>

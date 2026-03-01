@@ -201,6 +201,7 @@ Contributions of all kinds are welcome - whether it’s code, documentation, tes
 ## 📚 Resources
 
 - [The `did:cel` Method Specification](https://w3c-ccg.github.io/did-cel-spec/)
+- [W3C Verifiable Credential Data Integrity](https://www.w3.org/TR/vc-data-integrity)
 
 ## 💼 Commercial Support
 

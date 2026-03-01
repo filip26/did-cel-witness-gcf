@@ -24,7 +24,7 @@ To resolve a `did:cel` identifier, a resolver MUST perform the following steps:
     - The event is signed by a key authorized in the state established by the previous event.
     - Witness Verification: The resolver MUST verify that the event contains a sufficient number of valid witness signatures. The specific threshold and selection of required witnesses are determined by application-level logic based on the trust requirements of the relying party.
 6. Verify Liveness & Temporal Continuity: The resolver MUST verify a contiguous chain of heartbeat proofs throughout the log duration. 
-    - Frequency Match: Heartbeats MUST occur at the interval frequency defined in the DID configuration or method defaults.
+    - Liveness: The last event log MUST occur within the period defined in the last effective `didDocument.heartbeatFrequency`.
     - Continuity: Any gap in the heartbeat chain that exceeds the allowed threshold—without an accompanying deactivation or authorized suspension event—MUST result in a validation failure. This ensures that a storage provider cannot omit intermediate events or "freeze" the state in the past.
 7. Project State: Apply the cumulative state changes defined in the verified log to construct the final DID Document.
 8. Verify Origin: 

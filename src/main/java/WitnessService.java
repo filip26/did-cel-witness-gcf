@@ -15,7 +15,6 @@ import com.google.cloud.kms.v1.Digest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.protobuf.ByteString;
 
-import jakarta.json.Json;
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
@@ -178,7 +177,7 @@ public class WitnessService implements HttpFunction {
         response.setStatusCode(code);
         response.setContentType("application/json");
 
-        try (final var gen = Json.createGenerator(response.getWriter())) {
+        try (final var gen = JSON.createGenerator(response.getWriter())) {
             gen.writeStartObject()
                     .write("status", status)
                     .write("message", message)
