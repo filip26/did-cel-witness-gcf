@@ -1,8 +1,8 @@
+package com.apicatalog.cel.witness.verifier;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
@@ -14,58 +14,13 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.NamedParameterSpec;
 
-public class RawKeyImporter {
-
-    public static PublicKey loadRawKey(byte[] rawBytes) {
-        if (rawBytes.length == 32) {
-            return loadEd25519(rawBytes);
-        } else if (rawBytes.length == 33) {
-            return loadCompressedP256(rawBytes);
-        } else if (rawBytes.length == 49) {
-            return loadCompressedP384(rawBytes);
-        }
-        throw new IllegalArgumentException("Unsupported raw key length: " + rawBytes.length);
-    }
-
-    public static String digestName(PublicKey key) {
-
-        // TODO fixme
-//        IO.println(key.getAlgorithm());
-//        IO.println(key.getFormat());
-//        IO.println(key.getEncoded().length);
-//        IO.println(key.getParams());
-        IO.println(key);
-        if (key instanceof ECPublicKey ecKey) {
-            int fieldSize = ecKey.getParams().getCurve().getField().getFieldSize();
-            IO.println("EC");
-            IO.println(fieldSize);
-            if (fieldSize <= 256) {
-                return "SHA-256";
-            }
-            if (fieldSize <= 384) {
-                return "SHA-384";
-            }
-            return "SHA-512";
-        }
-        IO.println(key.getAlgorithm());
-        if (key.getAlgorithm().equals("Ed25519")) {
-            return "SHA-256";
-        }
-
-        switch (key.getAlgorithm()) {
-
-        default:
-            return "SHA-256";
-        }
-
-//        throw new IllegalArgumentException("Unsupported raw key length: " + rawBytes.length);
-    }
+class RawKeyImporter {
 
     /**
      * Loads Ed25519 from 32-byte raw format. Note: Ed25519 raw keys are
      * Little-Endian; Java's EdECPoint expects the standard RFC 8032 representation.
      */
-    private static PublicKey loadEd25519(byte[] rawBytes) {
+    public static PublicKey loadEd25519(byte[] rawBytes) {
         try {
             // Ed25519 uses the EdDSA algorithm name in Java 15+
             KeyFactory kf = KeyFactory.getInstance("EdDSA");
@@ -92,15 +47,7 @@ public class RawKeyImporter {
         }
     }
 
-    public static PublicKey loadCompressedP256(byte[] compressed) {
-        return loadNistCompressed(compressed, "secp256r1", "SHA256withECDSA");
-    }
-
-    private static PublicKey loadCompressedP384(byte[] compressed) {
-        return loadNistCompressed(compressed, "secp384r1", "SHA384withECDSA");
-    }
-
-    private static PublicKey loadNistCompressed(byte[] compressed, String curveName, String sigAlg) {
+    public static PublicKey loadNistCompressed(byte[] compressed, String curveName, String sigAlg) {
 
         try {
             java.security.AlgorithmParameters params = java.security.AlgorithmParameters.getInstance("EC");

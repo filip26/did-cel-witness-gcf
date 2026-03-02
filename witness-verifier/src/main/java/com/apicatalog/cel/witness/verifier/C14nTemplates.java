@@ -1,3 +1,4 @@
+package com.apicatalog.cel.witness.verifier;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -7,7 +8,7 @@ import java.util.Arrays;
  * Canonicalization (RDFC) proofs and documents, optimized for cryptographic
  * hashing and signing.
  */
-public class Templates {
+class C14nTemplates {
 
     private static final String[] JCS_PROOF_PARTS = new String[] {
             "{\"created\":\"",
@@ -20,7 +21,7 @@ public class Templates {
             .mapToInt(String::length)
             .sum();
 
-    private Templates() {
+    private C14nTemplates() {
         /* prevent instantiation */ }
 
     /**
