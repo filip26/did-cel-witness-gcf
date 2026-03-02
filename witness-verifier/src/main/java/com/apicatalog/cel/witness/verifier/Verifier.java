@@ -6,10 +6,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.EdECPublicKey;
 import java.util.function.Function;
-
-import com.apicatalog.multibase.Multibase;
-import com.apicatalog.multicodec.codec.KeyCodec;
 
 final class Verifier {
 
@@ -23,34 +22,119 @@ final class Verifier {
     }
 
     private final String suiteName;
+    private final Function<PublicKey, String[]> alogirthms;
 
     private final Function<String, byte[]> documentC14n;
     private final ProofCanonizer proofC14n;
 
     public Verifier(
             String name,
+            Function<PublicKey, String[]> algorithms,
             Function<String, byte[]> documentC14n,
             ProofCanonizer proofC14n) {
         this.suiteName = name;
+        this.alogirthms = algorithms;
         this.documentC14n = documentC14n;
         this.proofC14n = proofC14n;
     }
 
     public static Verifier newVerifier(String cryptosuite) {
-
         return switch (cryptosuite) {
-        case "ecdsa-jcs-2019", "eddsa-jcs-2022" ->
+        case "ecdsa-jcs-2019" ->
             new Verifier(
                     cryptosuite,
+                    Verifier::ecAlgos,
                     C14nTemplates::jcsDocument,
                     C14nTemplates::jcsProof);
-        case "ecdsa-rdfc-2019", "eddsa-rdfc-2022" ->
+
+        case "eddsa-jcs-2022" ->
             new Verifier(
                     cryptosuite,
+                    Verifier::edAlgos,
+                    C14nTemplates::jcsDocument,
+                    C14nTemplates::jcsProof);
+
+        case "ecdsa-rdfc-2019" ->
+            new Verifier(
+                    cryptosuite,
+                    Verifier::ecAlgos,
                     C14nTemplates::rdfcDocument,
                     C14nTemplates::rdfcProof);
+
+        case "eddsa-rdfc-2022" ->
+            new Verifier(
+                    cryptosuite,
+                    Verifier::edAlgos,
+                    C14nTemplates::rdfcDocument,
+                    C14nTemplates::rdfcProof);
+
         default -> throw new IllegalArgumentException("Unsupported DI cryptosuite [" + cryptosuite + "]");
         };
+    }
+
+    public boolean verify(
+            PublicKey publicKey,
+            byte[] signature,
+            String digest,
+            String created,
+            String method,
+            String nonce) {
+        var canonicalProof = proofC14n.apply(suiteName, created, method, nonce);
+        return verify(publicKey, signature, digest, canonicalProof);
+    }
+
+    public boolean verify(PublicKey publicKey, byte[] signature, String digest, byte[] canonicalProof) {
+        var canonicalDocument = documentC14n.apply(digest);
+        return verify(publicKey, signature, canonicalDocument, canonicalProof);
+    }
+
+    public boolean verify(
+            PublicKey publicKey,
+            byte[] signature,
+            byte[] canonicalDocument,
+            byte[] canonicalProof) {
+
+        try {
+            final var algos = alogirthms.apply(publicKey);
+
+            final var hash = hash(algos[0], canonicalDocument, canonicalProof);
+
+            var verifier = Signature.getInstance(algos[1]);
+
+            verifier.initVerify(publicKey);
+            verifier.update(hash);
+
+            return verifier.verify(signature);
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+
+        } catch (InvalidKeyException | SignatureException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    // For ECDSA (P-256, P-384, etc.)
+    private static String[] ecAlgos(PublicKey key) {
+        if (key instanceof ECPublicKey ecKey) {
+            var bits = ecKey.getParams().getCurve().getField().getFieldSize();
+            if (bits <= 256) {
+                return new String[] { "SHA-256", "SHA256withECDSA" };
+            }
+            if (bits <= 384) {
+                return new String[] { "SHA-384", "SHA384withECDSA" };
+            }
+            return new String[] { "SHA-512", "SHA512withECDSA" };
+        }
+        throw new IllegalArgumentException("Unsupported public key [" + key + "]");
+    }
+
+    // For Ed25519
+    private static String[] edAlgos(PublicKey key) {
+        if (key instanceof EdECPublicKey) {
+            return new String[] { "SHA-256", "Ed25519" };
+        }
+        throw new IllegalArgumentException();
     }
 
     /**
@@ -80,119 +164,5 @@ final class Verifier {
         System.arraycopy(proofHash, 0, result, 0, proofHash.length);
         System.arraycopy(docHash, 0, result, proofHash.length, docHash.length);
         return result;
-    }
-
-    public boolean verify(
-            PublicKey publicKey,
-            String algorithm,
-            byte[] signature,
-            byte[] hash) {
-
-        try {
-            var verifier = Signature.getInstance(algorithm);
-
-            verifier.initVerify(publicKey);
-            verifier.update(hash);
-
-            return verifier.verify(signature);
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-
-        } catch (InvalidKeyException | SignatureException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    public boolean verify(
-            byte[] rawPublicKey,
-            byte[] signature,
-            byte[] canonicalDocument,
-            byte[] canonicalProof) {
-
-        final String digestName;
-        final String algorithm;
-        final PublicKey publicKey;
-
-        if (rawPublicKey.length == 32) {
-            digestName = "SHA-256";
-            algorithm = "Ed25519";
-            publicKey = RawKeyImporter.loadEd25519(rawPublicKey);
-
-        } else if (rawPublicKey.length == 33) {
-            digestName = "SHA-256";
-            algorithm = "SHA256withECDSA";
-            publicKey = RawKeyImporter.loadNistCompressed(rawPublicKey, "secp256r1", "SHA256withECDSA");
-
-        } else if (rawPublicKey.length == 49) {
-            digestName = "SHA-384";
-            algorithm = "SHA384withECDSA";
-            publicKey = RawKeyImporter.loadNistCompressed(rawPublicKey, "secp384r1", "SHA384withECDSA");
-
-        } else {
-            throw new IllegalArgumentException("Unsupported public key: " + rawPublicKey);
-        }
-
-        try {
-
-            var hash = hash(digestName, canonicalDocument, canonicalProof);
-
-            return verify(publicKey, algorithm, signature, hash);
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public boolean verify(
-            String publicKeyMultibase,
-            String proofValue,
-            String digest,
-            String created,
-            String method,
-            String nonce) {
-
-        var publicKey = KeyCodec.P256_PUBLIC_KEY.decode(
-                Multibase.BASE_58_BTC.decode("zDnaer5PFEcdcb2pibj8q6BtPLhUAsF85UAAaf4HzPP4hWzNY"));
-        var signature = Multibase.BASE_58_BTC.decode(
-                "z381yXZWPi84qKPBQTz8ugg23v5Qd6BQ1qMYfCmU36qH4N8KeCvMzxHWvpQ45n9rrXTSCaKCWQKaGoTXKY9eGBEuvDUVYuani");
-
-        return verify(
-                publicKey,
-                signature,
-                digest,
-                created,
-                method,
-                nonce);
-    }
-
-    public boolean verify(
-            byte[] publicKey,
-            byte[] signature,
-            String digest,
-            String created,
-            String method,
-            String nonce) {
-
-        var canonicalDocument = documentC14n.apply(digest);
-        var canonicalProof = proofC14n.apply(suiteName, created, method, nonce);
-
-        return verify(publicKey, signature, canonicalDocument, canonicalProof);
-    }
-
-    public static void main(String[] args) throws InvalidKeyException, Exception {
-
-        var cs = Verifier.newVerifier("ecdsa-jcs-2019");
-
-        var x = cs.verify(
-                "zDnaer5PFEcdcb2pibj8q6BtPLhUAsF85UAAaf4HzPP4hWzNY",
-                "z381yXZWPi84qKPBQTz8ugg23v5Qd6BQ1qMYfCmU36qH4N8KeCvMzxHWvpQ45n9rrXTSCaKCWQKaGoTXKY9eGBEuvDUVYuani",
-                "z5C5b1uzYJN6pDR3aWgAqUMo",
-                "2026-03-01T21:15:16Z",
-                "did:key:zDnaer5PFEcdcb2pibj8q6BtPLhUAsF85UAAaf4HzPP4hWzNY#zDnaer5PFEcdcb2pibj8q6BtPLhUAsF85UAAaf4HzPP4hWzNY",
-                "1RLi73qEfeGU-O-tC_BGO-zuj2A-ndkrTiU5OK2APAQ");
-
-        IO.println(x);
-
     }
 }

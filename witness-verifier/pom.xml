@@ -49,34 +49,35 @@
 	<inceptionYear>2026</inceptionYear>
 
 	<properties>
-		<maven.compiler.release>25</maven.compiler.release>
+		<maven.compiler.release>21</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<argLine>-Dfile.encoding=UTF-8</argLine>
 
 		<jakarta.json.version>2.0.1</jakarta.json.version>
-
 		<junit.version>6.0.3</junit.version>
 	</properties>
 
 	<dependencies>
+		<!-- Tests -->	
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multibase</artifactId>
 			<version>4.1.0</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multicodec</artifactId>
 			<version>2.4.0</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.parsson</groupId>
 			<artifactId>jakarta.json</artifactId>
 			<version>1.1.7</version>
+			<scope>test</scope>
 		</dependency>
-
-		<!-- Tests -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>

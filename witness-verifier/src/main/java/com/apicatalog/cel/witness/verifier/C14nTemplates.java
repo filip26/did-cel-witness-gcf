@@ -129,30 +129,4 @@ class C14nTemplates {
                 .toString()
                 .getBytes(StandardCharsets.UTF_8);
     }
-
-    /**
-     * Builds the complete JSON proof including a cryptographic signature.
-     *
-     * @param cryptosuite the cryptosuite identifier
-     * @param created     ISO-8601 timestamp of the proof
-     * @param method      verification method URI
-     * @param nonce       cryptographically secure nonce
-     * @param signature   cryptographic proof value
-     * @return JSON proof string
-     */
-    public static String jsonProof(String cryptosuite, String created, String method, String nonce, String signature) {
-        return new StringBuilder(JCS_PROOF_PARTS_LENGTH + 16
-                + cryptosuite.length()
-                + created.length()
-                + nonce.length()
-                + method.length()
-                + signature.length())
-                .append(JCS_PROOF_PARTS[0]).append(created)
-                .append(JCS_PROOF_PARTS[1]).append(cryptosuite)
-                .append(JCS_PROOF_PARTS[2]).append(nonce)
-                .append(JCS_PROOF_PARTS[3]).append(method)
-                .append("\",\"proofValue\":\"").append(signature)
-                .append(JCS_PROOF_PARTS[4])
-                .toString();
-    }
 }
