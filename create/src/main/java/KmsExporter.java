@@ -8,8 +8,57 @@ import java.security.interfaces.EdECPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-public class KmsExporter {
+class KmsExporter {
 
+    public byte[] exportRawEDKey(com.google.cloud.kms.v1.PublicKey publicKey) throws Exception {
+
+        // 1. Get Public Key from KMS (Returns X.509 PEM)
+        String pem = publicKey.getPem();
+        byte[] derEncoded = KmsExporter.decodePem(pem);
+
+//        // 2. Try to parse as EdDSA (Ed25519) first
+//        try {
+        KeyFactory edkf = KeyFactory.getInstance("EdDSA");
+        PublicKey pubKey = edkf.generatePublic(new X509EncodedKeySpec(derEncoded));
+        if (pubKey instanceof EdECPublicKey edKey) {
+            return KmsExporter.extractEd25519Bytes(edKey);
+        }
+        throw new IllegalStateException("Unknown " + pubKey);
+//        } catch (Exception e) {
+//            // Not Ed25519, fall back to NIST EC (P-256/P-384)
+//            thor
+//        }
+
+        // 3. Fallback to NIST EC
+//        KeyFactory eckf = KeyFactory.getInstance("EC");
+//        ECPublicKey ecKey = (ECPublicKey) eckf.generatePublic(new X509EncodedKeySpec(derEncoded));
+//        return KmsExporter.compressNistKey(ecKey);
+    }
+
+    public byte[] exportRawECKey(com.google.cloud.kms.v1.PublicKey publicKey) throws Exception {
+
+        // 1. Get Public Key from KMS (Returns X.509 PEM)
+        String pem = publicKey.getPem();
+        byte[] derEncoded = KmsExporter.decodePem(pem);
+
+//        // 2. Try to parse as EdDSA (Ed25519) first
+//        try {
+//            KeyFactory edkf = KeyFactory.getInstance("EdDSA");
+//            PublicKey pubKey = edkf.generatePublic(new X509EncodedKeySpec(derEncoded));
+//            if (pubKey instanceof EdECPublicKey edKey) {
+//                return extractEd25519Bytes(edKey);
+//            }
+//        } catch (Exception e) {
+//            // Not Ed25519, fall back to NIST EC (P-256/P-384)
+//        }
+
+        // 3. Fallback to NIST EC
+        KeyFactory eckf = KeyFactory.getInstance("EC");
+        ECPublicKey ecKey = (ECPublicKey) eckf.generatePublic(new X509EncodedKeySpec(derEncoded));
+        return KmsExporter.compressNistKey(ecKey);
+    }
+
+    
     public byte[] exportRawPublicKey(String projectId, String location, String keyRing, String key, String version) throws Exception {
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             CryptoKeyVersionName name = CryptoKeyVersionName.of(projectId, location, keyRing, key, version);
@@ -36,7 +85,7 @@ public class KmsExporter {
         }
     }
 
-    private byte[] extractEd25519Bytes(EdECPublicKey key) {
+    static byte[] extractEd25519Bytes(EdECPublicKey key) {
         // Ed25519 public keys in Java are represented by an EdECPoint.
         // The "Y" coordinate already contains the 255-bit y-value 
         // and the MSB parity bit for x, following RFC 8032.
@@ -53,7 +102,7 @@ public class KmsExporter {
         return fixed;
     }
 
-    private byte[] compressNistKey(ECPublicKey pubKey) {
+    static byte[] compressNistKey(ECPublicKey pubKey) {
         int fieldSize = (pubKey.getParams().getCurve().getField().getFieldSize() + 7) / 8;
         byte[] x = normalize(pubKey.getW().getAffineX().toByteArray(), fieldSize);
         byte prefix = pubKey.getW().getAffineY().testBit(0) ? (byte) 0x03 : (byte) 0x02;
@@ -64,7 +113,7 @@ public class KmsExporter {
         return compressed;
     }
 
-    private byte[] normalize(byte[] data, int length) {
+    static byte[] normalize(byte[] data, int length) {
         byte[] fixed = new byte[length];
         int srcPos = Math.max(0, data.length - length);
         int destPos = Math.max(0, length - data.length);
@@ -72,7 +121,7 @@ public class KmsExporter {
         return fixed;
     }
 
-    private void reverseArray(byte[] array) {
+    private static void reverseArray(byte[] array) {
         for (int i = 0; i < array.length / 2; i++) {
             byte temp = array[i];
             array[i] = array[array.length - 1 - i];
@@ -80,7 +129,7 @@ public class KmsExporter {
         }
     }
 
-    private byte[] decodePem(String pem) {
+    static byte[] decodePem(String pem) {
         String clean = pem.replace("-----BEGIN PUBLIC KEY-----", "")
                           .replace("-----END PUBLIC KEY-----", "")
                           .replaceAll("\\s", "");

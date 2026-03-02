@@ -10,7 +10,8 @@
 	<name>Iron did:cel Create Service</name>
 
 	<description>
-An HTTP-triggered Google Cloud Run service exposing an endpoint to create did:cel identifiers secured and managed using Google Cloud KMS.
+		An HTTP-triggered Google Cloud Run service exposing an endpoint to
+		create did:cel identifiers secured and managed using Google Cloud KMS.
 	</description>
 
 	<url>https://github.com/filip26/iron-did-cel-witness</url>
@@ -89,6 +90,11 @@ An HTTP-triggered Google Cloud Run service exposing an endpoint to create did:ce
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multibase</artifactId>
 			<version>4.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.apicatalog</groupId>
+			<artifactId>copper-multicodec</artifactId>
+			<version>2.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.parsson</groupId>

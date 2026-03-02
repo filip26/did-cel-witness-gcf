@@ -1,17 +1,18 @@
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import com.apicatalog.multibase.Multibase;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
+import com.google.cloud.kms.v1.CryptoKeyVersionName;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
 import jakarta.json.spi.JsonProvider;
 
 public class CreateService implements HttpFunction {
@@ -33,14 +34,12 @@ public class CreateService implements HttpFunction {
     // Static configuration detected at startup
     private static final String KMS_LOCATION;
     private static final String KMS_KEY_RING;
-    private static final String KMS_KEY_TYPE;
 
     static {
         KMS_LOCATION = System.getenv("KMS_LOCATION");
         KMS_KEY_RING = System.getenv("KMS_KEY_RING");
-        KMS_KEY_TYPE = System.getenv("KMS_KEY_TYPE");
 
-        if (KMS_LOCATION == null || KMS_KEY_RING == null || KMS_KEY_TYPE == null) {
+        if (KMS_LOCATION == null || KMS_KEY_RING == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
 
@@ -57,12 +56,11 @@ public class CreateService implements HttpFunction {
                 }
             }));
 
-            //TODO check IAM rights
-            
-            LOG.info(String.format("Initialized for %s with %s/%s.",
-                    KMS_KEY_TYPE,
-                    KMS_LOCATION,
-                    KMS_KEY_RING));
+            // TODO check IAM rights
+
+            LOG.info(String.format("Initialized for %s at %s.",
+                    KMS_KEY_RING,
+                    KMS_LOCATION));
 
         } catch (IOException e) {
             throw new IllegalStateException("KMS initialization failed", e);
@@ -92,35 +90,52 @@ public class CreateService implements HttpFunction {
             return;
         }
 
-        if (payload == null || payload.size() != 1) {
-            sendError(response, 400, "Bad Request", "Malformatted body");
-            return;
-        }
+        var keyAlgorithm = "EC_SIGN_P256_SHA256";
+        var hms = true;
 
-        final String digest;
+//        var rawKey = exportRawECKey(PROJECT, KMS_LOCATION, KMS_KEY_RING, "HSM_EC_P256_SIGN", "1");
+//        var rawKey = exportRawEDKey(PROJECT, KMS_LOCATION, KMS_KEY_RING, "ED25519_SIGN", "1");
 
-        if (payload.get("digestMultibase") instanceof JsonString jsonString) {
-
-            digest = jsonString.getString();
-
-        } else {
-            sendError(response, 400, "Bad Request", "digestMultibase value must be JSON string");
-            return;
-        }
-
-        if (!Multibase.BASE_58_BTC.isEncoded(digest)
-                && !Multibase.BASE_64_URL.isEncoded(digest)) {
-            sendError(response, 400, "Bad Request",
-                    "digestMultibase value must be multibase: base58btc or base64URLnopad");
-            return;
-        }
+//        var multikey = KeyCodec.P256_PUBLIC_KEY.encode(rawKey);
+        //// var multikey = KeyCodec.ED25519_PUBLIC_KEY.encode(rawKey);
+//        var base = Multibase.BASE_58_BTC.encode(multikey);
 
         try {
+            // TODO replace with create key
+            var publicKey = KMS_CLIENT.getPublicKey(CryptoKeyVersionName.of(
+                    PROJECT,
+                    KMS_LOCATION,
+                    KMS_KEY_RING,
+                    "HSM_EC_P256_SIGN",
+                    "1"));
+
+            // assembly initial DID document
+            var document = DidCelLog.newDocument(publicKey);
+
+            var did = DidCelLog.createDid(document);
+
+            // assembly initial create operation
+            var create = DidCelLog.newCreateOperation(did, document);
+
+            var suite = CryptoSuite.newSuite(null, keyAlgorithm, null);
+
+            // TODO
+            var proof = suite.sign(create, did);
+
+            var didCelLog = Map.of("log", List.of(
+                    Map.of("event", Map.of(
+                            "event", Map.of(
+                                    "operation", create,
+                                    "proof", proof)))));
+
             response.setStatusCode(200);
-            response.setContentType("application/json");
+//            response.setContentType("application/json");
+            response.setContentType("text/plain");
 
             try (final var writer = response.getWriter()) {
-                writer.write("TODO");
+                writer.write("TODO\n");
+                writer.write(didCelLog.toString());
+
             }
 
         } catch (Exception e) {
@@ -129,7 +144,7 @@ public class CreateService implements HttpFunction {
         }
     }
 
-    private void sendError(HttpResponse response, int code, String status, String message) throws IOException {
+    private static void sendError(HttpResponse response, int code, String status, String message) throws IOException {
         response.setStatusCode(code);
         response.setContentType("application/json");
 

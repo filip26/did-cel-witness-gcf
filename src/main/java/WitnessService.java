@@ -173,7 +173,7 @@ public class WitnessService implements HttpFunction {
         }
     }
 
-    private void sendError(HttpResponse response, int code, String status, String message) throws IOException {
+    private static void sendError(HttpResponse response, int code, String status, String message) throws IOException {
         response.setStatusCode(code);
         response.setContentType("application/json");
 
