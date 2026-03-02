@@ -1,5 +1,6 @@
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -10,6 +11,10 @@ import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
 import com.google.cloud.kms.v1.CryptoKeyVersionName;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
@@ -27,19 +32,22 @@ public class CreateService implements HttpFunction {
 
     // Static initialization
     private static final JsonProvider JSON = JsonProvider.provider();
+    private static final Storage storage = StorageOptions.getDefaultInstance().getService();
 
     // Environment variables
-    private static final String PROJECT;
-
-    // Static configuration detected at startup
     private static final String KMS_LOCATION;
     private static final String KMS_KEY_RING;
+    private static final String BUCKET_NAME;
+
+    // Static configuration detected at startup
+    private static final String PROJECT;
 
     static {
         KMS_LOCATION = System.getenv("KMS_LOCATION");
         KMS_KEY_RING = System.getenv("KMS_KEY_RING");
+        BUCKET_NAME = System.getenv("BUCKET_NAME");
 
-        if (KMS_LOCATION == null || KMS_KEY_RING == null) {
+        if (KMS_LOCATION == null || KMS_KEY_RING == null || BUCKET_NAME == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
 
@@ -112,6 +120,7 @@ public class CreateService implements HttpFunction {
             // assembly initial DID document
             var document = DidCelLog.newDocument(publicKey);
 
+            // create new did:cel
             var did = DidCelLog.createDid(document);
 
             // assembly initial create operation
@@ -122,11 +131,13 @@ public class CreateService implements HttpFunction {
             // TODO
             var proof = suite.sign(create, did);
 
-            var didCelLog = Map.of("log", List.of(
-                    Map.of("event", Map.of(
+            var initialDidCelLog = Map.of(
+                    "log", List.of(Map.of(
                             "event", Map.of(
                                     "operation", create,
-                                    "proof", proof)))));
+                                    "proof", proof))));
+
+            // TODO store log on storage
 
             response.setStatusCode(200);
 //            response.setContentType("application/json");
@@ -134,7 +145,7 @@ public class CreateService implements HttpFunction {
 
             try (final var writer = response.getWriter()) {
                 writer.write("TODO\n");
-                writer.write(didCelLog.toString());
+                writer.write(initialDidCelLog.toString());
 
             }
 
@@ -155,4 +166,17 @@ public class CreateService implements HttpFunction {
                     .writeEnd();
         }
     }
+
+    private void storeLog(String did, String log) {
+
+        var blobId = BlobId.of(BUCKET_NAME, did);
+
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+                .setContentType("application/json")
+                .build();
+
+        // Minimal write: storage.create() only requires roles/storage.objectCreator
+        storage.create(blobInfo, log.getBytes(StandardCharsets.UTF_8));
+    }
+
 }

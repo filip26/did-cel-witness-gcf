@@ -45,15 +45,7 @@ The service is configured via the following environment variables:
 |----------|----------|------------|
 | `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
 | `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
-| `KMS_KEY_ALGO` | Yes | KMS signing key algorithm |
-
-**Supported Key Types**
-
-| Cryptosuite | KMS Key Algorithm | Key Size |
-|-------------|------------------|--------|----------|
-| `ecdsa-jcs-2019` | `EC_SIGN_P256_SHA256` | 256 bits |
-| `ecdsa-jcs-2019` | `EC_SIGN_P384_SHA384` | 384 bits |
-| `eddsa-jcs-2022` | `EC_SIGN_ED25519` | 256 bits |
+| `BUCKET_NAME` |  Yes | Name of GCS bucket to store initial event logs |
 
 ### IAM Permissions
 
@@ -81,6 +73,7 @@ Grant these roles to the service account:
 * `roles/cloudkms.publicKeyViewer` (To view public key)
 * `roles/cloudkms.signer` (To sign)
 * `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
+* `roles/storage.objectCreator` (To store initial DID log on GCS)
 
 ```bash
 gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
@@ -102,5 +95,11 @@ gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --keyring=$KMS_KEY_RING \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudkms.viewer"
+```
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+    --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/storage.objectCreator"
 ```
     
