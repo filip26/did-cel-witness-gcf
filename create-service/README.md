@@ -15,7 +15,7 @@
 * `heartbeatFrequency` optional (default: P3M)
 
 ```bash
-curl -X POST URL \
+curl -X POST ENDPOINT \
   -H "Content-Type: application/json" \
   -d '{"keyAlgorithm":"EC_SIGN_P256_SHA256"}'
 ```
@@ -33,7 +33,7 @@ curl -X POST URL \
 ```
 HTTP/1.1 201 Created
 ...
-Location: https://storage.googleapis.com/BUCKED_NAME/DID_METHOD_SPECIFIC_ID
+Location: https://storage.googleapis.com/BUCKET_NAME/DID_METHOD_SPECIFIC_ID
 Content-Type: application/json
 
 {
