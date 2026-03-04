@@ -18,7 +18,8 @@ class Document {
     public static Document newDocument(
             String publicKeyMultibase,
             String heartbeatFrequency,
-            List<String> serviceEndpoint) {
+            List<String> storageEndpoints,
+            String managementEndpoint) {
 
         var assertionMethod = new LinkedHashMap<String, Object>(4);
 
@@ -32,9 +33,13 @@ class Document {
                 "https://w3id.org/didcel/v1"));
         document.put("heartbeatFrequency", heartbeatFrequency);
         document.put("assertionMethod", List.of(assertionMethod));
-        document.put("service", List.of(Map.of(
-                "type", "CelStorageService",
-                "serviceEndpoint", serviceEndpoint)));
+        document.put("service", List.of(
+                Map.of(
+                        "type", "CelStorageService",
+                        "serviceEndpoint", storageEndpoints),
+                Map.of(
+                        "type", "CelMgmtService",
+                        "serviceEndpoint", List.of(managementEndpoint))));
 
         return new Document(document, assertionMethod);
     }
@@ -44,7 +49,7 @@ class Document {
         assertionMethod.put("controller", did);
         return document;
     }
-    
+
     public Map<String, Object> root() {
         return document;
     }

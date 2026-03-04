@@ -23,7 +23,6 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.google.protobuf.FieldMask;
 import com.google.protobuf.util.FieldMaskUtil;
 
 import jakarta.json.JsonException;
@@ -129,11 +128,11 @@ public class CreateService implements HttpFunction {
                                     .setProtectionLevel(protection)
                                     .build())
                     .putLabels("component", "did_cel")
-                    .build();
+                    .build(); 
+            
+            final var keyId = UUID.randomUUID().toString().replace("-", "_");
 
-            final var keyId = "did_cel_" + UUID.randomUUID().toString().replace("-", "_");
-
-            final var key = KMS_CLIENT.createCryptoKey(PARENT, keyId, cryptoKey);
+            final var key = KMS_CLIENT.createCryptoKey(PARENT, "did_cel_" + keyId, cryptoKey);
 
             final var resourceName = key.getName() + "/cryptoKeyVersions/1";
 
@@ -151,12 +150,13 @@ public class CreateService implements HttpFunction {
             final var document = Document.newDocument(
                     publicKeyMultibase,
                     heartbeatFrequency,
-                    List.of(storageUrl));
+                    List.of(storageUrl),
+                    "urn:uuid:" + keyId);
 
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
 
-            updateKeyLabel(key, "did_cel", methodSpecificId);
+//            updateKeyLabel(key, "did_cel", methodSpecificId);
 
             // create the did:cel identifier
             final var did = "did:cel:" + methodSpecificId;
