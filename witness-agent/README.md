@@ -4,6 +4,15 @@ Service for coordinating oblivious witnessing of did:cel event logs.
 
 ## Deployment
 
+### Configuration
+
+The service is configured via the following environment variables:
+
+| Variable | Required | Description |
+|----------|----------|------------|
+| `BUCKET_NAME` |  Yes | Name of GCS bucket |
+
+
 ### IAM Permissions
 
 Create a new service account:
@@ -24,7 +33,6 @@ gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
     --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/storage.objectUser"
 ```
-
 
 ### Deploy
 
