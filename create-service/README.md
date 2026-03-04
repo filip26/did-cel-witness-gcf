@@ -60,7 +60,7 @@ The service is configured via the following environment variables:
 |----------|----------|------------|
 | `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
 | `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
-| `BUCKET_NAME` |  Yes | Name of GCS bucket to store initial event logs |
+| `BUCKET_NAME` |  Yes | Name of GCS bucket to store event logs |
 
 ### IAM Permissions
 
@@ -68,7 +68,7 @@ Create a new service account:
 
 ```bash
 gcloud iam service-accounts create SA-NAME \
-    --display-name="did:cel create"
+    --display-name="did:cel creator"
 ```
 
 Create a new role:
@@ -86,8 +86,8 @@ Grant these roles to the service account:
 
 * `projects/$PROJECT_ID/roles/kmsKeyCreator` (To create a new key)
 * `roles/cloudkms.publicKeyViewer` (To view a public key)
-* `roles/cloudkms.signer` (To sign and view public key)
-* `roles/storage.objectCreator` (To store initial`did:cel` log on GCS)
+* `roles/cloudkms.signer` (To sign)
+* `roles/storage.objectCreator` (To store initial`did:cel` event log on GCS)
 
 ```bash
 gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \

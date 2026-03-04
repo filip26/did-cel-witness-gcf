@@ -23,6 +23,8 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.google.protobuf.FieldMask;
+import com.google.protobuf.util.FieldMaskUtil;
 
 import jakarta.json.JsonException;
 import jakarta.json.JsonObject;
@@ -154,6 +156,8 @@ public class CreateService implements HttpFunction {
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
 
+            updateKeyLabel(key, "did_cel", methodSpecificId);
+
             // create the did:cel identifier
             final var did = "did:cel:" + methodSpecificId;
 
@@ -231,5 +235,18 @@ public class CreateService implements HttpFunction {
 
         // Minimal write: storage.create() only requires roles/storage.objectCreator
         storage.create(blobInfo, content);
+    }
+
+    private static void updateKeyLabel(CryptoKey key, String label, String value) {
+        // Build the updated key object
+        var updatedKey = key.toBuilder()
+                .putLabels(label, value)
+                .build();
+
+        // Define the FieldMask (Crucial: Prevents wiping other fields)
+        var updateMask = FieldMaskUtil.fromString("labels");
+
+        // 4. Commit the update
+        KMS_CLIENT.updateCryptoKey(updatedKey, updateMask);
     }
 }
