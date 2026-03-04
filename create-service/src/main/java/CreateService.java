@@ -7,8 +7,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import com.apicatalog.multibase.Multibase;
 import com.apicatalog.tree.io.jakarta.JakartaGenerator;
 import com.apicatalog.tree.io.java.JavaAdapter;
+import com.google.api.core.ApiFuture;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
@@ -19,10 +21,12 @@ import com.google.cloud.kms.v1.CryptoKeyVersionTemplate;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
 import com.google.cloud.kms.v1.ProtectionLevel;
+import com.google.cloud.kms.v1.UpdateCryptoKeyRequest;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.google.protobuf.Duration;
 import com.google.protobuf.util.FieldMaskUtil;
 
 import jakarta.json.JsonException;
@@ -44,26 +48,25 @@ public class CreateService implements HttpFunction {
     private static final Storage storage = StorageOptions.getDefaultInstance().getService();
 
     // Environment variables
-    private static final String KMS_LOCATION;
-    private static final String KMS_KEY_RING;
     private static final String BUCKET_NAME;
 
     // Static configuration detected at startup
     private static final String PROJECT;
-    private static KeyRingName PARENT;
+    private static final KeyRingName KEY_RING;
 
     static {
-        KMS_LOCATION = System.getenv("KMS_LOCATION");
-        KMS_KEY_RING = System.getenv("KMS_KEY_RING");
+        var kmsLocation = System.getenv("KMS_LOCATION");
+        var kmsKeyRingName = System.getenv("KMS_KEY_RING");
+
         BUCKET_NAME = System.getenv("BUCKET_NAME");
 
-        if (KMS_LOCATION == null || KMS_KEY_RING == null || BUCKET_NAME == null) {
+        if (kmsLocation == null || kmsKeyRingName == null || BUCKET_NAME == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
 
         PROJECT = ServiceOptions.getDefaultProjectId();
 
-        PARENT = KeyRingName.of(PROJECT, KMS_LOCATION, KMS_KEY_RING);
+        KEY_RING = KeyRingName.of(PROJECT, kmsLocation, kmsKeyRingName);
 
         try {
 
@@ -79,8 +82,8 @@ public class CreateService implements HttpFunction {
             // TODO check IAM rights
 
             LOG.info(String.format("Initialized for %s at %s.",
-                    KMS_KEY_RING,
-                    KMS_LOCATION));
+                    kmsKeyRingName,
+                    kmsLocation));
 
         } catch (IOException e) {
             throw new IllegalStateException("KMS initialization failed", e);
@@ -122,17 +125,18 @@ public class CreateService implements HttpFunction {
 
             final var cryptoKey = CryptoKey.newBuilder()
                     .setPurpose(CryptoKey.CryptoKeyPurpose.ASYMMETRIC_SIGN)
+                    .setDestroyScheduledDuration(Duration.newBuilder()
+                            .setSeconds(3600 * 24)) // TODO 24h - make it configurable
                     .setVersionTemplate(
                             CryptoKeyVersionTemplate.newBuilder()
                                     .setAlgorithm(algorithm)
                                     .setProtectionLevel(protection)
                                     .build())
-                    .putLabels("component", "did_cel")
-                    .build(); 
-            
-            final var keyId = UUID.randomUUID().toString().replace("-", "_");
+                    .build();
 
-            final var key = KMS_CLIENT.createCryptoKey(PARENT, "did_cel_" + keyId, cryptoKey);
+            final var keyId = UUID.randomUUID().toString();
+
+            final var key = KMS_CLIENT.createCryptoKey(KEY_RING, keyId, cryptoKey);
 
             final var resourceName = key.getName() + "/cryptoKeyVersions/1";
 
@@ -150,13 +154,14 @@ public class CreateService implements HttpFunction {
             final var document = Document.newDocument(
                     publicKeyMultibase,
                     heartbeatFrequency,
-                    List.of(storageUrl),
-                    "urn:uuid:" + keyId);
+                    List.of(storageUrl));
 
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
 
-//            updateKeyLabel(key, "did_cel", methodSpecificId);
+            // bind the did id to the key - temporary solution
+            var updatedKeyFuture = updateKeyLabel(key, "did_cel",
+                    Multibase.BASE_32_HEX.encode(Multibase.BASE_58_BTC.decode(methodSpecificId)));
 
             // create the did:cel identifier
             final var did = "did:cel:" + methodSpecificId;
@@ -195,6 +200,9 @@ public class CreateService implements HttpFunction {
 
             // store log
             storeLog(methodSpecificId, content);
+            
+            // wait for key update to finish
+            updatedKeyFuture.get();
 
             response.setStatusCode(201, "Created");
             response.appendHeader("Location", storageUrl + methodSpecificId);
@@ -225,19 +233,14 @@ public class CreateService implements HttpFunction {
         }
     }
 
-    private void storeLog(String did, byte[] content) {
-
-        var blobId = BlobId.of(BUCKET_NAME, did);
-
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
-                .setContentType("application/json")
-                .build();
-
+    private void storeLog(String id, byte[] content) {
         // Minimal write: storage.create() only requires roles/storage.objectCreator
-        storage.create(blobInfo, content);
+        storage.create(BlobInfo.newBuilder(BlobId.of(BUCKET_NAME, id))
+                .setContentType("application/json")
+                .build(), content);
     }
 
-    private static void updateKeyLabel(CryptoKey key, String label, String value) {
+    private static ApiFuture<CryptoKey> updateKeyLabel(CryptoKey key, String label, String value) {
         // Build the updated key object
         var updatedKey = key.toBuilder()
                 .putLabels(label, value)
@@ -246,7 +249,11 @@ public class CreateService implements HttpFunction {
         // Define the FieldMask (Crucial: Prevents wiping other fields)
         var updateMask = FieldMaskUtil.fromString("labels");
 
-        // 4. Commit the update
-        KMS_CLIENT.updateCryptoKey(updatedKey, updateMask);
+        // Commit the update
+        return KMS_CLIENT.updateCryptoKeyCallable().futureCall(
+                UpdateCryptoKeyRequest.newBuilder()
+                        .setCryptoKey(updatedKey)
+                        .setUpdateMask(updateMask)
+                        .build());
     }
 }

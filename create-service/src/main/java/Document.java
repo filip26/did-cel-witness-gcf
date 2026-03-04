@@ -18,8 +18,7 @@ class Document {
     public static Document newDocument(
             String publicKeyMultibase,
             String heartbeatFrequency,
-            List<String> storageEndpoints,
-            String managementEndpoint) {
+            List<String> storageEndpoints) {
 
         var assertionMethod = new LinkedHashMap<String, Object>(4);
 
@@ -36,10 +35,7 @@ class Document {
         document.put("service", List.of(
                 Map.of(
                         "type", "CelStorageService",
-                        "serviceEndpoint", storageEndpoints),
-                Map.of(
-                        "type", "CelMgmtService",
-                        "serviceEndpoint", List.of(managementEndpoint))));
+                        "serviceEndpoint", storageEndpoints)));
 
         return new Document(document, assertionMethod);
     }
