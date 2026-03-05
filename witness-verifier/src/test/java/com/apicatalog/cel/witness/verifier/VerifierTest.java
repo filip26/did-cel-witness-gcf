@@ -11,7 +11,7 @@ class VerifierTest {
 
     @Test
     void testEc256Jcs() {
-        var isValid = Verifier.newVerifier("ecdsa-jcs-2019").verify(
+        var isValid = Verifier.getVerifier("ecdsa-jcs-2019").verify(
                 RawKeyImporter.loadNistCompressed(
                         KeyCodec.P256_PUBLIC_KEY.decode(
                                 Multibase.BASE_58_BTC.decode("zDnaer5PFEcdcb2pibj8q6BtPLhUAsF85UAAaf4HzPP4hWzNY")),
@@ -30,7 +30,7 @@ class VerifierTest {
 
     @Test
     void testEd256Rdfc() {
-        var isValid = Verifier.newVerifier("eddsa-rdfc-2022").verify(
+        var isValid = Verifier.getVerifier("eddsa-rdfc-2022").verify(
                 RawKeyImporter.loadEd25519(
                         KeyCodec.ED25519_PUBLIC_KEY.decode(
                                 Multibase.BASE_58_BTC.decode("z6MkfFnKw9QwkU32VQYC6TKfAW2A6ueUjfbrFYxq9yQzoowo"))),

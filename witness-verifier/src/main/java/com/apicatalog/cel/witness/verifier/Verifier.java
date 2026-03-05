@@ -10,7 +10,7 @@ import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.EdECPublicKey;
 import java.util.function.Function;
 
-final class Verifier {
+public final class Verifier {
 
     @FunctionalInterface
     public static interface ProofCanonizer {
@@ -21,8 +21,32 @@ final class Verifier {
                 String nonce);
     }
 
+    public static Verifier ECDSA_JCS_2019 = new Verifier(
+            "ecdsa-jcs-2019",
+            Verifier::ecAlgos,
+            C14nTemplates::jcsDocument,
+            C14nTemplates::jcsProof);
+
+    public static Verifier ECDSA_RDFC_2019 = new Verifier(
+            "ecdsa-rdfc-2019",
+            Verifier::ecAlgos,
+            C14nTemplates::rdfcDocument,
+            C14nTemplates::rdfcProof);
+
+    public static Verifier EDDSA_JCS_2022 = new Verifier(
+            "ecdsa-jcs-2019",
+            Verifier::edAlgos,
+            C14nTemplates::jcsDocument,
+            C14nTemplates::jcsProof);
+
+    public static Verifier EDDSA_RDFC_2022 = new Verifier(
+            "eddsa-rdfc-2022",
+            Verifier::edAlgos,
+            C14nTemplates::rdfcDocument,
+            C14nTemplates::rdfcProof);
+
     private final String suiteName;
-    private final Function<PublicKey, String[]> alogirthms;
+    private final Function<PublicKey, String[]> algorithms;
 
     private final Function<String, byte[]> documentC14n;
     private final ProofCanonizer proofC14n;
@@ -33,40 +57,20 @@ final class Verifier {
             Function<String, byte[]> documentC14n,
             ProofCanonizer proofC14n) {
         this.suiteName = name;
-        this.alogirthms = algorithms;
+        this.algorithms = algorithms;
         this.documentC14n = documentC14n;
         this.proofC14n = proofC14n;
     }
 
-    public static Verifier newVerifier(String cryptosuite) {
+    public static Verifier getVerifier(String cryptosuite) {
         return switch (cryptosuite) {
-        case "ecdsa-jcs-2019" ->
-            new Verifier(
-                    cryptosuite,
-                    Verifier::ecAlgos,
-                    C14nTemplates::jcsDocument,
-                    C14nTemplates::jcsProof);
+        case "ecdsa-jcs-2019" -> ECDSA_JCS_2019;
 
-        case "eddsa-jcs-2022" ->
-            new Verifier(
-                    cryptosuite,
-                    Verifier::edAlgos,
-                    C14nTemplates::jcsDocument,
-                    C14nTemplates::jcsProof);
+        case "eddsa-jcs-2022" -> EDDSA_JCS_2022;
 
-        case "ecdsa-rdfc-2019" ->
-            new Verifier(
-                    cryptosuite,
-                    Verifier::ecAlgos,
-                    C14nTemplates::rdfcDocument,
-                    C14nTemplates::rdfcProof);
+        case "ecdsa-rdfc-2019" -> ECDSA_RDFC_2019;
 
-        case "eddsa-rdfc-2022" ->
-            new Verifier(
-                    cryptosuite,
-                    Verifier::edAlgos,
-                    C14nTemplates::rdfcDocument,
-                    C14nTemplates::rdfcProof);
+        case "eddsa-rdfc-2022" -> EDDSA_RDFC_2022;
 
         default -> throw new IllegalArgumentException("Unsupported DI cryptosuite [" + cryptosuite + "]");
         };
@@ -95,7 +99,7 @@ final class Verifier {
             byte[] canonicalProof) {
 
         try {
-            final var algos = alogirthms.apply(publicKey);
+            final var algos = algorithms.apply(publicKey);
 
             final var hash = hash(algos[0], canonicalDocument, canonicalProof);
 
@@ -112,6 +116,10 @@ final class Verifier {
         } catch (InvalidKeyException | SignatureException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+    
+    public String suiteName() {
+        return suiteName;
     }
 
     // For ECDSA (P-256, P-384, etc.)
