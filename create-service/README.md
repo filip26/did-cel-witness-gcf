@@ -22,7 +22,7 @@ curl -X POST ENDPOINT \
 
 ```json
 {
-  "keyAlgorithm": "EC_SIGN_P256_SHA256",
+  "algorithm": "EC_SIGN_P256_SHA256",
   "hsm": false,
   "heartbeatFrequency": "P3M"
 }

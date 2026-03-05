@@ -30,7 +30,6 @@ import com.google.protobuf.Duration;
 import com.google.protobuf.util.FieldMaskUtil;
 
 import jakarta.json.JsonException;
-import jakarta.json.JsonObject;
 import jakarta.json.spi.JsonProvider;
 
 public class CreateService implements HttpFunction {
@@ -98,13 +97,19 @@ public class CreateService implements HttpFunction {
             return;
         }
 
-        JsonObject payload = null;
+        final CryptoKeyVersionAlgorithm algorithm;
+        final boolean useHsm;
+        final String heartbeatFrequency;
 
         try (final var parser = JSON.createReader(request.getInputStream())) {
 
-            payload = parser.readObject();
+            var payload = parser.readObject();
 
-        } catch (JsonException e) {
+            algorithm = CryptoKeyVersionAlgorithm.valueOf(payload.getString("algorithm"));
+            useHsm = payload.getBoolean("hsm", false);
+            heartbeatFrequency = payload.getString("heartbeatFrequency", "P3M");
+
+        } catch (JsonException | IllegalArgumentException e) {
             sendError(response, 400, "Bad Request", e.getMessage());
             return;
 
@@ -113,15 +118,7 @@ public class CreateService implements HttpFunction {
             return;
         }
 
-        var algorithm = CryptoKeyVersionAlgorithm.valueOf("EC_SIGN_P256_SHA256");
-        var useHsm = false;
-        var heartbeatFrequency = "P3M";
-
         try {
-
-            final var protection = useHsm
-                    ? ProtectionLevel.HSM
-                    : ProtectionLevel.SOFTWARE;
 
             final var cryptoKey = CryptoKey.newBuilder()
                     .setPurpose(CryptoKey.CryptoKeyPurpose.ASYMMETRIC_SIGN)
@@ -130,7 +127,9 @@ public class CreateService implements HttpFunction {
                     .setVersionTemplate(
                             CryptoKeyVersionTemplate.newBuilder()
                                     .setAlgorithm(algorithm)
-                                    .setProtectionLevel(protection)
+                                    .setProtectionLevel(useHsm
+                                            ? ProtectionLevel.HSM
+                                            : ProtectionLevel.SOFTWARE)
                                     .build())
                     .build();
 
