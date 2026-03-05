@@ -15,7 +15,6 @@ import com.apicatalog.jcs.Jcs;
 import com.apicatalog.multibase.Multibase;
 import com.apicatalog.multicodec.codec.MultihashCodec;
 import com.apicatalog.tree.io.jakarta.JakartaAdapter;
-import com.google.cloud.ServiceOptions;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -49,17 +48,12 @@ public class WitnessAgent implements HttpFunction {
     // Environment variables
     private static final String BUCKET_NAME;
 
-    // Static configuration detected at startup
-    private static final String PROJECT;
-
     static {
         BUCKET_NAME = System.getenv("BUCKET_NAME");
 
         if (BUCKET_NAME == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
-
-        PROJECT = ServiceOptions.getDefaultProjectId();
 
         // TODO check IAM rights
 
@@ -175,17 +169,7 @@ public class WitnessAgent implements HttpFunction {
 
             // assembly witnessed event
             var witnessedBuilder = JSON.createObjectBuilder(unsignedEvent);
-            var proofs = JSON.createArrayBuilder();
-
-            if (existingProofs != null) {
-                for (var proof : existingProofs) {
-                    proofs.add(proof);
-                }
-            }
-
-            for (var proof : witnessProofs) {
-                proofs.add(proof);
-            }
+            var proofs = mergeProofs(existingProofs, witnessProofs);
 
             var witnessed = witnessedBuilder.add("proof", proofs).build();
 
@@ -214,6 +198,23 @@ public class WitnessAgent implements HttpFunction {
             LOG.severe(e.getMessage());
             sendError(response, 500, "Internal Service Error", e.getMessage());
         }
+    }
+
+    private JsonArray mergeProofs(JsonArray existingProofs, List<JsonObject> witnessProofs) {
+        
+        var proofs = JSON.createArrayBuilder();
+
+        if (existingProofs != null) {
+            for (var proof : existingProofs) {
+                proofs.add(proof);
+            }
+        }
+
+        for (var proof : witnessProofs) {
+            proofs.add(proof);
+        }
+        
+        return proofs.build();
     }
 
     private JsonObject witnessRequest(String url, String digestMultibase) {
