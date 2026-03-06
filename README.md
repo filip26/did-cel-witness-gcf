@@ -17,31 +17,34 @@ Can be used independently of the `did:cel` ecosystem.
 
 ## 🔐 Managed `did:cel` Identifiers
 
-A set of services, agents, and libraries that use Google Cloud KMS to create and manage secure `did:cel` identifiers. Components can be used independently or together.
+A modular suite for managing the lifecycle of secure `did:cel` identifiers using Google Cloud KMS. Components can be used independently or as a unified stack.
 
 - [Create Service](./create-service) 
-  Creates a new `did:cel` bound to Google KMS key.
+  Provisions a new KMS key and initializes its corresponding `did:cel` event log.
   
 - [Heartbeat Agent](./heartbeat-agent)
-  Heartbeat event generator assuring liveness and temporal continuity of an event log.
+  Generates periodic events to ensure liveness and temporal continuity of the event log.
   
 - [Identity Agent](./identity-agent)
-  Acts on behalf of a DID controller to prove `did:cel` ownership.
+  Authorizes operations and proves `did:cel` ownership on behalf of the controller.
+  
+- **Adoption Service**
+  Binds an existing KMS key to a new `did:cel` and initializes the initial event log.
   
 - **Life-Cycle Listener**
   Reflects changes on KMS keys bound to `did:cel` in the event log (TBD).
   
 - **Resolver**
-  Resolves a given `did:cel` and validates its event log to assembly the DID document (TBD).
+  Resolves `did:cel` identifiers and validates the event log to assemble the DID Document (TBD).
   
 - [Storage Service](./storage-service)
-  GCS utilized as `CelStorageService`.
+  Manages the GCS back-end for the logs, utilizing GCS as `CelStorageService`. 
   
 - [Witness Agent](./witness-agent)
-  Coordinates oblivious witnessing of `did:cel` event logs for identifiers managed using Google KMS and GCS.
+  Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
   
 - [Witness Verifier](./witness-verifier)
-  Simple library for verifying W3C VC DI witness proofs in $O(1)$.
+  Library for $O(1)$ verification of W3C VC Data Integrity witness proofs.
 
 ## 🤝 Contributing
 
