@@ -9,7 +9,7 @@ This repository provides services, agents, and libraries for creating, managing,
 
 [Oblivious Witness Service](./witness-service)
 
-Performs oblivious witnessing of event log. Issues signed and timestamped attestations over event log hashes using Google Cloud KMS in a serverless environment. Processes only cryptographic hashes and never accesses event log contents, preserving privacy while producing verifiable W3C VC DI witness proofs. 
+Performs oblivious witnessing of event log. Issues signed and timestamped attestations over event log hashes using Google Cloud KMS in a serverless environment. Processes only cryptographic hashes and never accesses event log contents, preserving privacy while producing verifiable W3C VC Data Integrity witness proofs. 
 
 ⚡ $O(1)$ c14n, supports RDFC or JCS ⚡
 
@@ -20,7 +20,7 @@ Can be used independently of the `did:cel` ecosystem.
 A modular suite for managing the lifecycle of secure `did:cel` identifiers using Google Cloud KMS. Components can be used independently or as a unified stack.
 
 - [Create Service](./create-service) 
-  Provisions a new KMS key and initializes its corresponding `did:cel` event log.
+  Provisions a new KMS key as `did:cel` and initializes its corresponding event log.
   
 - [Heartbeat Agent](./heartbeat-agent)
   Generates periodic events to ensure liveness and temporal continuity of the event log.
