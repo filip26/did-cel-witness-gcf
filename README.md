@@ -38,7 +38,7 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
   Resolves `did:cel` identifiers and validates the event log to assemble the DID Document (TBD).
   
 - [Storage Service](./storage-service)
-  Manages the GCS back-end for the logs, utilizing GCS as `CelStorageService`. 
+  Utilizes the GCS back-end for the logs as `CelStorageService`. 
   
 - [Witness Agent](./witness-agent)
   Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
