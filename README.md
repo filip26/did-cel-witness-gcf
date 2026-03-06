@@ -9,7 +9,7 @@ This repository provides services, agents, and libraries for creating, managing,
 
 [Oblivious Witness Service](./witness-service)
 
-Performs oblivious witnessing of event log. Issues signed and timestamped attestations over event log hashes using Google Cloud KMS in a serverless environment. Processes only cryptographic hashes and never accesses event log contents, preserving privacy while producing verifiable VD DI witness proofs. 
+Performs oblivious witnessing of event log. Issues signed and timestamped attestations over event log hashes using Google Cloud KMS in a serverless environment. Processes only cryptographic hashes and never accesses event log contents, preserving privacy while producing verifiable W3C VC DI witness proofs. 
 
 ⚡ $O(1)$ c14n, supports RDFC or JCS ⚡
 
@@ -26,13 +26,13 @@ A set of services, agents, and libraries that use Google Cloud KMS to create and
   Heartbeat event generator assuring liveness and temporal continuity of an event log.
   
 - [Identity Agent](./identity-agent)
-  Acts on behalf of a DID controller to prove DID ownership.
+  Acts on behalf of a DID controller to prove `did:cel` ownership.
   
 - **Life-Cycle Listener**
   Reflects changes on KMS keys bound to `did:cel` in the event log (TBD).
   
 - **Resolver**
-  Resolves a given `did:cel` and validates its event log to produce the DID document (TBD).
+  Resolves a given `did:cel` and validates its event log to assembly the DID document (TBD).
   
 - [Storage Service](./storage-service)
   GCS utilized as `CelStorageService`.
@@ -41,7 +41,7 @@ A set of services, agents, and libraries that use Google Cloud KMS to create and
   Coordinates oblivious witnessing of `did:cel` event logs for identifiers managed using Google KMS and GCS.
   
 - [Witness Verifier](./witness-verifier)
-  Simple library for verifying VCDI witness proofs in $O(1)$.
+  Simple library for verifying W3C VC DI witness proofs in $O(1)$.
 
 ## 🤝 Contributing
 
