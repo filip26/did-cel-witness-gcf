@@ -1,6 +1,6 @@
-# `did:cel` Witness Agent
+# Iron `did:cel` Witness Agent
 
-Service for coordinating oblivious witnessing of did:cel event logs.
+A service for coordinating oblivious witnessing of `did:cel` event logs for `did:cel` identifiers managed using Google KMS and GCS.
 
 ## Service
 

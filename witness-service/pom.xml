@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.apicatalog</groupId>
-	<artifactId>iron-did-cel-witness-verifier</artifactId>
+	<artifactId>iron-did-cel-witness-service</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>Iron did:cel Witness VC DI Proof Verifier</name>
+	<name>Iron did:cel Witness Service</name>
 
 	<description>
-		A cryptographic verification component that validates did:cel witness
-		VC DI proofs.
+		An implementation of HTTP-triggered Google Cloud Run Functions providing
+		did:cel Witness endpoint using Google Cloud KMS.
 	</description>
 
 	<url>https://github.com/filip26/iron-did-cel-witness</url>
@@ -49,35 +49,61 @@
 	<inceptionYear>2026</inceptionYear>
 
 	<properties>
-		<maven.compiler.release>21</maven.compiler.release>
+		<maven.compiler.release>25</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<argLine>-Dfile.encoding=UTF-8</argLine>
 
 		<jakarta.json.version>2.0.1</jakarta.json.version>
+
 		<junit.version>6.0.3</junit.version>
 	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>26.76.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
-		<!-- Tests -->
+		<dependency>
+			<groupId>com.google.cloud.functions</groupId>
+			<artifactId>functions-framework-api</artifactId>
+			<version>2.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-kms</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multibase</artifactId>
 			<version>4.1.0</version>
-			<scope>test</scope>
 		</dependency>
-		<dependency>
+				<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multicodec</artifactId>
 			<version>2.4.0</version>
-			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.eclipse.parsson</groupId>
 			<artifactId>jakarta.json</artifactId>
 			<version>1.1.7</version>
-			<scope>test</scope>
 		</dependency>
+
+		<!-- Tests -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
@@ -92,6 +118,25 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.5</version>
+			</plugin>
+
+			<plugin>
+				<!--
+          Google Cloud Functions Framework Maven plugin
+
+          This plugin allows you to run Cloud Functions Java code
+          locally. Use the following terminal command to run a
+          given function locally:
+
+          mvn function:run -Drun.functionTarget=your.package.yourFunction
+        -->
+				<groupId>com.google.cloud.functions</groupId>
+				<artifactId>function-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<!--                <configuration>-->
+				<!--
+                <functionTarget>com.apicatalog.vc.fnc.VerifyFunction</functionTarget>-->
+				<!--                </configuration>-->
 			</plugin>
 		</plugins>
 	</build>

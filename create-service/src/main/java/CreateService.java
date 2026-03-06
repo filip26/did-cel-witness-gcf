@@ -216,7 +216,7 @@ public class CreateService implements HttpFunction {
 
         } catch (Exception e) {
             LOG.severe(e.getMessage());
-            sendError(response, 500, "Internal Service Error", e.getMessage());
+            sendError(response, 500, "Internal Error", e.getMessage());
         }
     }
 

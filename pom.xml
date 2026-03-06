@@ -1,143 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<groupId>com.apicatalog</groupId>
-	<artifactId>iron-did-cel-witness-service</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+    <modelVersion>4.0.0</modelVersion>
 
-	<name>Iron did:cel Witness Service</name>
+    <groupId>com.apicatalog</groupId>
+    <artifactId>iron-did-cel</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging> 
 
-	<description>
-		An implementation of HTTP-triggered Google Cloud Run Functions providing
-		did:cel Witness endpoint using Google Cloud KMS.
-	</description>
-
-	<url>https://github.com/filip26/iron-did-cel-witness</url>
-
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
-
-	<issueManagement>
-		<system>github</system>
-		<url>https://github.com/filip26/iron-did-cel-witness/issues</url>
-	</issueManagement>
-
-	<scm>
-		<connection>scm:git:git://github.com/filip26/iron-did-cel-witness.git</connection>
-		<developerConnection>
-			scm:git:git://github.com/filip26/iron-did-cel-witness.git</developerConnection>
-		<url>https://github.com/filip26/iron-did-cel-witness/tree/main</url>
-	</scm>
-
-	<developers>
-		<developer>
-			<id>filip26</id>
-			<name>Filip Kolarik</name>
-			<email>filip26@gmail.com</email>
-			<roles>
-				<role>author</role>
-			</roles>
-		</developer>
-	</developers>
-
-	<inceptionYear>2026</inceptionYear>
-
-	<properties>
-		<maven.compiler.release>25</maven.compiler.release>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<argLine>-Dfile.encoding=UTF-8</argLine>
-
-		<jakarta.json.version>2.0.1</jakarta.json.version>
-
-		<junit.version>6.0.3</junit.version>
-	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.google.cloud</groupId>
-				<artifactId>libraries-bom</artifactId>
-				<version>26.77.0</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
-	<dependencies>
-		<dependency>
-			<groupId>com.google.cloud.functions</groupId>
-			<artifactId>functions-framework-api</artifactId>
-			<version>2.0.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.google.cloud</groupId>
-			<artifactId>google-cloud-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.cloud</groupId>
-			<artifactId>google-cloud-kms</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.apicatalog</groupId>
-			<artifactId>copper-multibase</artifactId>
-			<version>4.1.0</version>
-		</dependency>
-				<dependency>
-			<groupId>com.apicatalog</groupId>
-			<artifactId>copper-multicodec</artifactId>
-			<version>2.4.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.eclipse.parsson</groupId>
-			<artifactId>jakarta.json</artifactId>
-			<version>1.1.7</version>
-		</dependency>
-
-		<!-- Tests -->
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.5</version>
-			</plugin>
-
-			<plugin>
-				<!--
-          Google Cloud Functions Framework Maven plugin
-
-          This plugin allows you to run Cloud Functions Java code
-          locally. Use the following terminal command to run a
-          given function locally:
-
-          mvn function:run -Drun.functionTarget=your.package.yourFunction
-        -->
-				<groupId>com.google.cloud.functions</groupId>
-				<artifactId>function-maven-plugin</artifactId>
-				<version>1.0.0</version>
-				<!--                <configuration>-->
-				<!--
-                <functionTarget>com.apicatalog.vc.fnc.VerifyFunction</functionTarget>-->
-				<!--                </configuration>-->
-			</plugin>
-		</plugins>
-	</build>
+    <name>Iron did:cel Agents, Services, Storage on GC</name>
+    <modules>
+        <module>witness-service</module>
+        <module>witness-agent</module>
+        <module>witness-verifier</module>
+        <module>create-service</module>
+    </modules>
+    
+    <build>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>3.1.4</version>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+    </build>    
 </project>
