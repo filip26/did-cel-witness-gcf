@@ -19,8 +19,8 @@ Can be used independently of the `did:cel` ecosystem.
 
 A modular suite for managing the lifecycle of secure `did:cel` identifiers using Google Cloud KMS. Components can be used independently or as a unified stack.
 
-- [Create Service](./create-service/README.md) 
-  Provisions a new KMS key as `did:cel` and initializes its corresponding event log.
+- [Provision Service](./provision-service/README.md) 
+  Provisions a `did:cel` identifier by either creating a new KMS key or binding an existing one, and initializes the corresponding event log.
 
 - [Witness Agent](./witness-agent/README.md)
   Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
@@ -30,10 +30,7 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
   
 - [Identity Agent](./identity-agent/README.md)
   Authorizes operations and proves `did:cel` ownership on behalf of the controller.
-  
-- **Adoption Service**
-  Binds an existing KMS key to a new `did:cel` and initializes the initial event log.
-  
+    
 - **Life-Cycle Listener**
   Reflects changes on KMS keys bound to `did:cel` in the event log (TBD).
   

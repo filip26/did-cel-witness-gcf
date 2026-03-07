@@ -1,6 +1,6 @@
-# Icon `did:cel` Create Service
+# Icon `did:cel` Provision Service
 
-This service creates a new `did:cel` identifier bound to a newly created Google KMS key. The initial `did:cel` event log is stored in GCS.
+Provisions a `did:cel` identifier by either creating a new Google Cloud KMS key or binding an existing one. Initializes the corresponding `did:cel` event log, optionally storing it in GCS.
 
 ## Service
 
