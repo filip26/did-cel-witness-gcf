@@ -6,8 +6,6 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 
 #### Request
 
-#### Parameters
-
 - `assertionMethod` (required)  
   Identifier of the Google Cloud KMS signing key used as the `did:cel` assertion method.
 
@@ -53,7 +51,6 @@ curl -X POST ENDPOINT \
 }
 ```
 
-
 #### Response
 
 If the initial event log is stored in Google Cloud Storage:
@@ -80,15 +77,6 @@ Response body:
 ```
 
 ## Deploy
-
-### KMS Pricing (March 2026)
-
-| Algorithm | Protection Level | Cost per Month | Compliance |
-| :--- | :--- | :--- | :--- |
-| P-256 / P-384 / Ed25519 | Software | $0.06 | FIPS 140-2 Level 1 |
-| P-256 / P-384 | HSM | $2.50 | FIPS 140-2 Level 3 |
-
-_Note: Prices current as of March 4, 2026. Costs are per active key version._
 
 ### Configuration
 
