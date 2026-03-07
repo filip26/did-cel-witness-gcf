@@ -21,8 +21,11 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
 
 - [Create Service](./create-service) 
   Provisions a new KMS key as `did:cel` and initializes its corresponding event log.
-  
-- [Heartbeat Agent](./heartbeat-agent)
+
+- [Witness Agent](./witness-agent)
+  Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
+
+- [Heartbeat Service](./heartbeat-service)
   Generates periodic events to ensure liveness and temporal continuity of the event log.
   
 - [Identity Agent](./identity-agent)
@@ -39,10 +42,7 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
   
 - [Storage Service](./storage-service)
   Utilizes the GCS back-end for the logs as `CelStorageService`. 
-  
-- [Witness Agent](./witness-agent)
-  Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
-  
+    
 - [Witness Verifier](./witness-verifier)
   Library for $O(1)$ verification of W3C VC Data Integrity witness proofs.
 
