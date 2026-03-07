@@ -19,16 +19,16 @@ Can be used independently of the `did:cel` ecosystem.
 
 A modular suite for managing the lifecycle of secure `did:cel` identifiers using Google Cloud KMS. Components can be used independently or as a unified stack.
 
-- [Create Service](./create-service) 
+- [Create Service](./create-service/README.md) 
   Provisions a new KMS key as `did:cel` and initializes its corresponding event log.
 
-- [Witness Agent](./witness-agent)
+- [Witness Agent](./witness-agent/README.md)
   Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
 
-- [Heartbeat Service](./heartbeat-service)
+- [Heartbeat Service](./heartbeat-service/README.md)
   Generates periodic events to ensure liveness and temporal continuity of the event log.
   
-- [Identity Agent](./identity-agent)
+- [Identity Agent](./identity-agent/README.md)
   Authorizes operations and proves `did:cel` ownership on behalf of the controller.
   
 - **Adoption Service**
@@ -40,11 +40,14 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
 - **Resolver**
   Resolves `did:cel` identifiers and validates the event log to assemble the DID Document (TBD).
   
-- [Storage Service](./storage-service)
+- [Storage Service](./storage-service/README.md)
   Utilizes the GCS back-end for the logs as `CelStorageService`. 
     
-- [Witness Verifier](./witness-verifier)
+- [Witness Verifier](./witness-verifier/README.md)
   Library for $O(1)$ verification of W3C VC Data Integrity witness proofs.
+
+- [`CelStorageService` Mirror Action](./storage-service/did-log-mirror-action.yml)
+  Syncs the event logs from GCS or any HTTP endpoint for the `did:cel` identifiers defined in the repository.
 
 ## 🤝 Contributing
 

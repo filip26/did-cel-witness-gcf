@@ -82,6 +82,7 @@
 			<groupId>com.google.cloud</groupId>
 			<artifactId>google-cloud-kms</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multibase</artifactId>

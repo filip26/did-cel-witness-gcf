@@ -132,3 +132,4 @@ A resolver fetching the log receives a `200 OK` status with `Content-Type: appli
 Once uploaded, the `storage` parameter in the DID URL may point to the bucket's public storage base:
 `did:cel:[method-specific-id]?storage=https://storage.googleapis.com/[STORAGE]/`
 
+---
