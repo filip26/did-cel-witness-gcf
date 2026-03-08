@@ -112,7 +112,7 @@ public class ProvisionService implements HttpFunction {
 
             final var signKeyMapping = setMultikeyAsync(
                     keyLocalId(document.assertionMethod()),
-                    document.getKeysToBind()).get().iterator();
+                    document.getKeysToBind()).iterator();
 
             final var keyResourceName = (String) signKeyMapping.next();
             final var publicKey = (PublicKey) signKeyMapping.next();
@@ -228,17 +228,9 @@ public class ProvisionService implements HttpFunction {
         };
     }
 
-    /**
-     * Asynchronously retrieves, transforms, and applies KMS Public Keys to the
-     * document state. * @param kmsKeys A list of maps containing KMS key
-     * configuration.
-     * 
-     * @return An ApiFuture that completes when all keys have been retrieved and the
-     *         local state updated.
-     */
-    private static final ApiFuture<List<Object>> setMultikeyAsync(
+    private static final List<Object> setMultikeyAsync(
             String signKeyLocalId,
-            List<Map<String, String>> kmsKeys) {
+            List<Map<String, String>> kmsKeys) throws InterruptedException, ExecutionException {
 
         final var futureMap = new LinkedHashMap<String, ApiFuture<List<Object>>>(kmsKeys.size());
 
@@ -267,38 +259,33 @@ public class ProvisionService implements HttpFunction {
         }
 
         // Combine all individual string futures into one list future
-        var allFutures = ApiFutures.allAsList(futureMap.values());
+        ApiFutures.allAsList(futureMap.values()).get();
 
-        // Chain the final update loop to execute once all strings are ready
-        return ApiFutures.transform(
-                allFutures,
-                ignoredList -> {
+        List<Object> signKey = null;
 
-                    List<Object> signKey = null;
+        for (var kmsKey : kmsKeys) {
+            
+            var localKeyId = keyLocalId(kmsKey);
 
-                    for (var kmsKey : kmsKeys) {
-                        var localKeyId = keyLocalId(kmsKey);
+            try {
 
-                        try {
+                var mapping = futureMap.get(localKeyId).get();
 
-                            var mapping = futureMap.get(localKeyId).get();
+                if (localKeyId == signKeyLocalId) {
+                    signKey = mapping;
+                }
 
-                            if (localKeyId == signKeyLocalId) {
-                                signKey = mapping;
-                            }
-
-                            // This .get() is safe and non-blocking because allAsList has completed
-                            Document.setMultikey(kmsKey, (String) mapping.get(2));
-                        } catch (InterruptedException | ExecutionException e) {
-                            // This should technically not happen since the parent future succeeded
-                            throw new RuntimeException("Failed to retrieve pre-resolved future", e);
-                        }
-                    }
-                    return signKey;
-                },
-                MoreExecutors.directExecutor());
+                // This .get() is safe and non-blocking because allAsList has completed
+                Document.setMultikey(kmsKey, (String) mapping.get(2));
+            } catch (InterruptedException | ExecutionException e) {
+                // This should technically not happen since the parent future succeeded
+                throw new RuntimeException("Failed to retrieve pre-resolved future", e);
+            }
+        }
+        return signKey;
     }
 
+    //TODO Document should generate temporary local id
     private static String keyLocalId(Map<String, String> kmsKey) {
         return kmsKey.get("kmsKey") + "/" + kmsKey.getOrDefault("kmsKeyVersion", "1");
     }
