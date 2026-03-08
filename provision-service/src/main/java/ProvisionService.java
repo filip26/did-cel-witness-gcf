@@ -44,7 +44,6 @@ public class ProvisionService implements HttpFunction {
     private static final JsonGeneratorFactory JSON_GENERATOR_FACTORY = Json.createGeneratorFactory(Map.of());
 
     // Static configuration detected at startup
-    private static final String PROJECT;
     private static final KeyRingName KEY_RING;
 
     static {
@@ -55,9 +54,9 @@ public class ProvisionService implements HttpFunction {
             throw new IllegalStateException("Incomplete environment configuration");
         }
 
-        PROJECT = ServiceOptions.getDefaultProjectId();
+        var project = ServiceOptions.getDefaultProjectId();
 
-        KEY_RING = KeyRingName.of(PROJECT, kmsLocation, kmsKeyRingName);
+        KEY_RING = KeyRingName.of(project, kmsLocation, kmsKeyRingName);
 
         try {
 
@@ -72,9 +71,7 @@ public class ProvisionService implements HttpFunction {
 
             // TODO check IAM rights
 
-            LOG.info(String.format("Initialized for %s at %s.",
-                    kmsKeyRingName,
-                    kmsLocation));
+            LOG.info(String.format("Initialized for %s", KEY_RING.toString()));
 
         } catch (IOException e) {
             throw new IllegalStateException("KMS initialization failed", e);
@@ -110,29 +107,13 @@ public class ProvisionService implements HttpFunction {
 
         try {
 
-            final var signKeyMapping = setMultikeyAsync(
-                    keyLocalId(document.assertionMethod()),
+            final var signKeyMapping = bindKeys(
+                    document.signKeyLocalId(),
                     document.getKeysToBind()).iterator();
 
             final var keyResourceName = (String) signKeyMapping.next();
             final var publicKey = (PublicKey) signKeyMapping.next();
             final var publicKeyMultibase = (String) signKeyMapping.next();
-
-//            final var keyResourceName = CryptoKeyVersionName.format(
-//                    KEY_RING.getProject(),
-//                    KEY_RING.getLocation(),
-//                    KEY_RING.getKeyRing(),
-//                    assertionMethod.get("kmsKey"),
-//                    assertionMethod.getOrDefault("kmsKeyVersion", "1"));
-//
-//            // get public key
-//            final var publicKey = KMS_CLIENT.getPublicKey(keyResourceName);
-//
-//            // get public key encoded as multibase
-//            final var publicKeyMultibase = EventLog.publicKeyMultibase(publicKey);
-//
-//            // set the key representation to Multikey
-//            Document.setMultikey(assertionMethod, publicKeyMultibase);
 
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
@@ -228,7 +209,7 @@ public class ProvisionService implements HttpFunction {
         };
     }
 
-    private static final List<Object> setMultikeyAsync(
+    private static final List<Object> bindKeys(
             String signKeyLocalId,
             List<Map<String, String>> kmsKeys) throws InterruptedException, ExecutionException {
 
@@ -237,7 +218,7 @@ public class ProvisionService implements HttpFunction {
         for (var kmsKey : kmsKeys) {
             var keyName = kmsKey.get("kmsKey");
             var version = kmsKey.getOrDefault("kmsKeyVersion", "1");
-            var localKeyId = keyName + "/" + version;
+            var localKeyId = kmsKey.get("id");
 
             if (futureMap.containsKey(localKeyId)) {
                 continue;
@@ -265,17 +246,17 @@ public class ProvisionService implements HttpFunction {
 
         for (var kmsKey : kmsKeys) {
             
-            var localKeyId = keyLocalId(kmsKey);
+            var localKeyId = kmsKey.get("id");
 
             try {
 
+                // This .get() is safe and non-blocking because allAsList has completed
                 var mapping = futureMap.get(localKeyId).get();
 
                 if (localKeyId == signKeyLocalId) {
                     signKey = mapping;
                 }
 
-                // This .get() is safe and non-blocking because allAsList has completed
                 Document.setMultikey(kmsKey, (String) mapping.get(2));
             } catch (InterruptedException | ExecutionException e) {
                 // This should technically not happen since the parent future succeeded
@@ -283,10 +264,5 @@ public class ProvisionService implements HttpFunction {
             }
         }
         return signKey;
-    }
-
-    //TODO Document should generate temporary local id
-    private static String keyLocalId(Map<String, String> kmsKey) {
-        return kmsKey.get("kmsKey") + "/" + kmsKey.getOrDefault("kmsKeyVersion", "1");
     }
 }

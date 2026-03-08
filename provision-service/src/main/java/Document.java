@@ -6,16 +6,16 @@ import java.util.Map;
 class Document {
 
     private final Map<String, Object> document;
-    private final Map<String, String> signKey;
-    private final List<Map<String, String>> publicKeys;
+    private final String signKeyLocalId;
+    private final List<Map<String, String>> keysToBind;
 
     private Document(
             Map<String, Object> document,
-            Map<String, String> signKeyId,
+            String signKeyLocalId,
             List<Map<String, String>> keysToBind) {
         this.document = document;
-        this.signKey = signKeyId;
-        this.publicKeys = keysToBind;
+        this.signKeyLocalId = signKeyLocalId;
+        this.keysToBind = keysToBind;
     }
 
     // assembly initial did document
@@ -26,7 +26,7 @@ class Document {
                 "https://www.w3.org/ns/did/v1.1",
                 "https://w3id.org/didcel/v1"));
 
-        Map<String, String> signKeyId = null;
+        String signKeyLocalId = null;
         List<Map<String, String>> keysToBind = new ArrayList<>();
 
         if (!document.containsKey("heartbeatFrequency")) {
@@ -48,16 +48,16 @@ class Document {
                 }
 
                 for (var value : values) {
-                    if (value instanceof Map keyMap && keyMap.get("kmsKey") instanceof String kmsKey) {
+                    if (value instanceof Map keyMap && keyMap.containsKey("kmsKey")) {
 
-                        var kmsKeyVersion = keyMap.getOrDefault("kmsKeyVersion", "1");
-
-                        var kmsKeyId = kmsKey + "/" + kmsKeyVersion;
+                        var localId = keyLocalId(keyMap);
 
                         if ("assertionMethod".equals(entry.getKey())) {
-                            signKeyId = keyMap;
-
+                            signKeyLocalId = localId;
                         }
+
+                        keyMap.put("id", localId);
+
                         keysToBind.add(keyMap);
                     }
                 }
@@ -67,12 +67,12 @@ class Document {
             }
         }
 
-        if (signKeyId == null) {
+        if (signKeyLocalId == null) {
             throw new IllegalArgumentException();
         }
 
         // TODO
-        return new Document(document, signKeyId, keysToBind);
+        return new Document(document, signKeyLocalId, keysToBind);
     }
 
     // assembly initial create operation
@@ -105,7 +105,7 @@ class Document {
 
     public Map<String, Object> update(String did) {
         document.put("id", did);
-        for (var key : publicKeys) {
+        for (var key : keysToBind) {
             key.put("controller", did);
         }
         return document;
@@ -115,12 +115,12 @@ class Document {
         return document;
     }
 
-    public Map<String, String> assertionMethod() {
-        return signKey;
+    public String signKeyLocalId() {
+        return signKeyLocalId;
     }
 
     public List<Map<String, String>> getKeysToBind() {
-        return publicKeys;
+        return keysToBind;
     }
 
     public static void setMultikey(Map<String, String> holder, String publicKeyMultibase) {
@@ -128,5 +128,9 @@ class Document {
         holder.put("id", "#" + publicKeyMultibase);
         holder.put("type", "Multikey");
         holder.put("publicKeyMultibase", publicKeyMultibase);
+    }
+
+    private static String keyLocalId(Map<String, String> kmsKey) {
+        return kmsKey.get("kmsKey") + "/" + kmsKey.getOrDefault("kmsKeyVersion", "1");
     }
 }
