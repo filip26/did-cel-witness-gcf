@@ -57,9 +57,8 @@ class Document {
                         if ("assertionMethod".equals(entry.getKey())) {
                             signKeyId = keyMap;
 
-                        } else {
-                            keysToBind.add(keyMap);
                         }
+                        keysToBind.add(keyMap);
                     }
                 }
 
@@ -106,8 +105,9 @@ class Document {
 
     public Map<String, Object> update(String did) {
         document.put("id", did);
-        signKey.put("controller", did);
-//        assertionMethod.put("controller", did);
+        for (var key : publicKeys) {
+            key.put("controller", did);
+        }
         return document;
     }
 

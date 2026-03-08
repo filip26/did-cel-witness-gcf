@@ -110,23 +110,29 @@ public class ProvisionService implements HttpFunction {
 
         try {
 
-            final var assertionMethod = document.assertionMethod();
+            final var signKeyMapping = setMultikeyAsync(
+                    keyLocalId(document.assertionMethod()),
+                    document.getKeysToBind()).get().iterator();
 
-            final var keyResourceName = CryptoKeyVersionName.format(
-                    KEY_RING.getProject(),
-                    KEY_RING.getLocation(),
-                    KEY_RING.getKeyRing(),
-                    assertionMethod.get("kmsKey"),
-                    assertionMethod.getOrDefault("kmsKeyVersion", "1"));
+            final var keyResourceName = (String) signKeyMapping.next();
+            final var publicKey = (PublicKey) signKeyMapping.next();
+            final var publicKeyMultibase = (String) signKeyMapping.next();
 
-            // get public key
-            final var publicKey = KMS_CLIENT.getPublicKey(keyResourceName);
-
-            // get public key encoded as multibase
-            final var publicKeyMultibase = EventLog.publicKeyMultibase(publicKey);
-
-            // set the key representation to Multikey
-            Document.setMultikey(assertionMethod, publicKeyMultibase);
+//            final var keyResourceName = CryptoKeyVersionName.format(
+//                    KEY_RING.getProject(),
+//                    KEY_RING.getLocation(),
+//                    KEY_RING.getKeyRing(),
+//                    assertionMethod.get("kmsKey"),
+//                    assertionMethod.getOrDefault("kmsKeyVersion", "1"));
+//
+//            // get public key
+//            final var publicKey = KMS_CLIENT.getPublicKey(keyResourceName);
+//
+//            // get public key encoded as multibase
+//            final var publicKeyMultibase = EventLog.publicKeyMultibase(publicKey);
+//
+//            // set the key representation to Multikey
+//            Document.setMultikey(assertionMethod, publicKeyMultibase);
 
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
@@ -230,9 +236,11 @@ public class ProvisionService implements HttpFunction {
      * @return An ApiFuture that completes when all keys have been retrieved and the
      *         local state updated.
      */
-    private static final ApiFuture<Void> setMultikeyAsync(List<Map<String, String>> kmsKeys) {
+    private static final ApiFuture<List<Object>> setMultikeyAsync(
+            String signKeyLocalId,
+            List<Map<String, String>> kmsKeys) {
 
-        final var futureMap = new LinkedHashMap<String, ApiFuture<String>>(kmsKeys.size());
+        final var futureMap = new LinkedHashMap<String, ApiFuture<List<Object>>>(kmsKeys.size());
 
         for (var kmsKey : kmsKeys) {
             var keyName = kmsKey.get("kmsKey");
@@ -254,29 +262,44 @@ public class ProvisionService implements HttpFunction {
                     KMS_CLIENT
                             .getPublicKeyCallable()
                             .futureCall(GetPublicKeyRequest.newBuilder().setName(resourceName).build()),
-                    EventLog::publicKeyMultibase,
+                    publicKey -> List.of(resourceName, publicKey, EventLog.publicKeyMultibase(publicKey)),
                     MoreExecutors.directExecutor()));
         }
 
         // Combine all individual string futures into one list future
-        var allKeysFuture = ApiFutures.allAsList(futureMap.values());
+        var allFutures = ApiFutures.allAsList(futureMap.values());
 
         // Chain the final update loop to execute once all strings are ready
         return ApiFutures.transform(
-                allKeysFuture,
+                allFutures,
                 ignoredList -> {
+
+                    List<Object> signKey = null;
+
                     for (var kmsKey : kmsKeys) {
-                        var localKeyId = kmsKey.get("kmsKey") + "/" + kmsKey.getOrDefault("kmsKeyVersion", "1");
+                        var localKeyId = keyLocalId(kmsKey);
+
                         try {
+
+                            var mapping = futureMap.get(localKeyId).get();
+
+                            if (localKeyId == signKeyLocalId) {
+                                signKey = mapping;
+                            }
+
                             // This .get() is safe and non-blocking because allAsList has completed
-                            Document.setMultikey(kmsKey, futureMap.get(localKeyId).get());
+                            Document.setMultikey(kmsKey, (String) mapping.get(2));
                         } catch (InterruptedException | ExecutionException e) {
                             // This should technically not happen since the parent future succeeded
                             throw new RuntimeException("Failed to retrieve pre-resolved future", e);
                         }
                     }
-                    return null; // Return Void
+                    return signKey;
                 },
                 MoreExecutors.directExecutor());
+    }
+
+    private static String keyLocalId(Map<String, String> kmsKey) {
+        return kmsKey.get("kmsKey") + "/" + kmsKey.getOrDefault("kmsKeyVersion", "1");
     }
 }
