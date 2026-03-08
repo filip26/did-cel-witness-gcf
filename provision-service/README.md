@@ -32,7 +32,7 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 ```bash
 curl -X POST ENDPOINT \
   -H "Content-Type: application/json" \
-  -d '{"assertionMethod": "KMS_KEY_ID"}'
+  -d '{"assertionMethod": "KMS_KEY_ID", "storage": "gs://"}'
 ```
 
 ```json
@@ -44,9 +44,13 @@ curl -X POST ENDPOINT \
   }],
   ...
   "service": [
-  	"gs://BUCKET_NAME/",
+  	"gs://",
   	{
-    ...
+  	  "type": "CelStorageService",
+  	  "serviceEndpoint": [
+  	     ""
+  	  ]
+     }
   }]
 }
 ```
