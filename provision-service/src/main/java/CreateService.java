@@ -22,16 +22,16 @@ import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
 import com.google.cloud.kms.v1.ProtectionLevel;
 import com.google.cloud.kms.v1.UpdateCryptoKeyRequest;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import com.google.protobuf.Duration;
 import com.google.protobuf.util.FieldMaskUtil;
 
 import jakarta.json.JsonException;
 import jakarta.json.spi.JsonProvider;
 
+/**
+ * TODO resuse part -> Activation Agent
+ */
+@Deprecated
 public class CreateService implements HttpFunction {
 
     private static final Logger LOG = Logger.getLogger(CreateService.class.getName());
@@ -44,7 +44,7 @@ public class CreateService implements HttpFunction {
 
     // Static initialization
     private static final JsonProvider JSON = JsonProvider.provider();
-    private static final Storage STORAGE = StorageOptions.getDefaultInstance().getService();
+//    private static final Storage STORAGE = StorageOptions.getDefaultInstance().getService();
 
     // Environment variables
     private static final String BUCKET_NAME;
@@ -234,9 +234,9 @@ public class CreateService implements HttpFunction {
 
     private void storeLog(String id, byte[] content) {
         // Minimal write: storage.create() only requires roles/storage.objectCreator
-        STORAGE.create(BlobInfo.newBuilder(BlobId.of(BUCKET_NAME, id))
-                .setContentType("application/json")
-                .build(), content);
+//        STORAGE.create(BlobInfo.newBuilder(BlobId.of(BUCKET_NAME, id))
+//                .setContentType("application/json")
+//                .build(), content);
     }
 
     private static ApiFuture<CryptoKey> updateKeyLabel(CryptoKey key, String label, String value) {

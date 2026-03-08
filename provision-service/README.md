@@ -20,35 +20,28 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 - `service` (required)  
   Defines service endpoints associated with the identifier.
 
-  If a `gs://` URI is present, the initial event log is written to the specified
-  Google Cloud Storage location and the response returns `201 Created`
-  with the log location.
-
 - `heartbeatFrequency` (optional)  
   ISO-8601 duration specifying how often heartbeat events should be generated.  
   Default: `P3M`.
 
-
-```bash
-curl -X POST ENDPOINT \
-  -H "Content-Type: application/json" \
-  -d '{"assertionMethod": "KMS_KEY_ID", "storage": "gs://"}'
-```
-
 ```json
 {
   "heartbeatFrequency": "P3M",
-  "assertionMethod": "KMS_KEY_ID",
+  "assertionMethod": [{ 
+  	"kmsKey": "...",
+  	"kmsKeyVersion": "..."
+  }],
   "authenticationMethod": [{
+  	"kmsKey": "...",
+  	"kmsKeyVersion": "..."  
+  }, {
 	...
   }],
   ...
-  "service": [
-  	"gs://",
-  	{
+  "service": [{
   	  "type": "CelStorageService",
   	  "serviceEndpoint": [
-  	     ""
+  	     "https://storage.googleapis.com/did-cel-log/"
   	  ]
      }
   }]
@@ -57,24 +50,10 @@ curl -X POST ENDPOINT \
 
 #### Response
 
-If the initial event log is stored in Google Cloud Storage:
-
-```
-HTTP/2 201 Created
-location: https://storage.googleapis.com/BUCKET_NAME/DID_METHOD_SPECIFIC_ID
-content-type: application/json
-```
-
-Otherwise:
-
 ```
 HTTP/2 200 OK
 content-type: application/json
-```
 
-Response body:
-
-```
 {
   Initial Event Log
 }
@@ -90,7 +69,6 @@ The service is configured via the following environment variables:
 |----------|----------|------------|
 | `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
 | `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
-| `BUCKET_NAME` |  No | Name of GCS bucket to store event logs |
 
 ### IAM Permissions
 
@@ -105,7 +83,6 @@ Grant these roles to the service account:
 
 * `roles/cloudkms.publicKeyViewer` (To view a public key)
 * `roles/cloudkms.signer` (To sign)
-* `roles/storage.objectCreator` (To store initial`did:cel` event log on GCS)
 
 ```bash
 gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
@@ -120,13 +97,5 @@ gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudkms.signer"
 ```
-
-```bash
-gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
-    --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/storage.objectCreator"
-```
-
----
 
 

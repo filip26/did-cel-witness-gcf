@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.apicatalog</groupId>
-	<artifactId>iron-did-cel-create-service</artifactId>
+	<artifactId>iron-did-cel-provision-service</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>Iron did:cel Create Service</name>
+	<name>Iron did:cel Provision Service</name>
 
 	<description>
-		An HTTP-triggered Google Cloud Run service exposing an endpoint to
-		create did:cel identifiers secured and managed using Google Cloud KMS.
+		Provisions a `did:cel` identifier by binding an existing Google KMS key,
+		and initializes the corresponding event log.
 	</description>
 
 	<url>https://github.com/filip26/iron-did-cel</url>
@@ -87,10 +87,6 @@
 		<dependency>
 			<groupId>com.google.cloud</groupId>
 			<artifactId>google-cloud-kms</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.cloud</groupId>
-			<artifactId>google-cloud-storage</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.apicatalog</groupId>

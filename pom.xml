@@ -55,7 +55,7 @@
 		<module>witness-service</module>
 		<module>witness-verifier</module>
 		<module>witness-agent</module>
-		<module>create-service</module>
+		<module>provision-service</module>
 		<module>heartbeat-service</module>
 	</modules>
 
