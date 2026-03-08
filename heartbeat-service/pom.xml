@@ -1,17 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.apicatalog</groupId>
-	<artifactId>iron-did-cel-verifier</artifactId>
+	<artifactId>iron-did-cel-heartbeat-service</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>Iron did:cel Witness VC DI Proof Verifier</name>
+	<name>Iron did:cel Heartbeat Service</name>
 
 	<description>
-		A cryptographic verification component that validates did:cel witness
-		VC DI proofs.
+		Generates periodic events to ensure liveness and temporal continuity of the event log.
 	</description>
 
 	<url>https://github.com/filip26/iron-did-cel</url>
@@ -49,40 +49,55 @@
 	<inceptionYear>2026</inceptionYear>
 
 	<properties>
-		<maven.compiler.release>21</maven.compiler.release>
+		<maven.compiler.target>25</maven.compiler.target>
+		<maven.compiler.source>25</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<argLine>-Dfile.encoding=UTF-8</argLine>
-
-		<jakarta.json.version>2.0.1</jakarta.json.version>
-		<junit.version>6.0.3</junit.version>
 	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>26.77.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
-		<!-- Tests -->
+		<dependency>
+			<groupId>com.google.cloud.functions</groupId>
+			<artifactId>functions-framework-api</artifactId>
+			<version>2.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-pubsub</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-kms</artifactId>
+		</dependency>
+		
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multibase</artifactId>
 			<version>4.1.0</version>
-			<scope>test</scope>
 		</dependency>
-		<dependency>
+				<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multicodec</artifactId>
 			<version>2.4.0</version>
-			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.eclipse.parsson</groupId>
 			<artifactId>jakarta.json</artifactId>
 			<version>1.1.7</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 	</dependencies>
@@ -90,8 +105,12 @@
 	<build>
 		<plugins>
 			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.5</version>
+				<groupId>com.google.cloud.functions</groupId>
+				<artifactId>function-maven-plugin</artifactId>
+				<version>0.11.0</version>
+				<configuration>
+					<functionTarget>HeartbeatService</functionTarget>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

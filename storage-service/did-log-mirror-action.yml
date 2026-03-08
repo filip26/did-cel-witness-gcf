@@ -1,0 +1,60 @@
+name: did:cel Event Log Sync
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Resolve and Sync Identifiers
+      run: |
+        # Define your base public HTTP endpoint here
+        BASE_URL="https://storage.googleapis.com/did-cel-log"
+		# Source - a list of did:cel identifiers separated by newline
+        SOURCES_FILE="sources.txt"
+		# Where to store the mirrored logs
+        DEST_DIR="./logs"
+        mkdir -p "$DEST_DIR"
+
+        if [ ! -f "$SOURCES_FILE" ]; then
+          echo "Error: $SOURCES_FILE not found."
+          exit 1
+        fi
+
+        while IFS= read -r DID || [ -n "$DID" ]; do
+          # Skip empty lines and comments
+          [[ -z "$DID" || "$DID" =~ ^# ]] && continue
+          
+          # Strip 'did:cel:' prefix to get the unique identifier
+          ID=${DID#did:cel:}
+          
+          # Construct the URL (assuming the filename is ID.json or similar)
+          # Adjust the extension/path suffix as needed
+          RESOLVED_URL="$BASE_URL/$ID.json"
+          
+          echo "Syncing $DID -> $ID.json"
+          curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID.json"
+        done < "$SOURCES_FILE"
+
+        # Git Logic
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        git add "$DEST_DIR"
+        
+        if git diff --cached --quiet; then
+          echo "No changes detected."
+          exit 0
+        else
+          echo "Updates detected. Committing..."
+          git commit -m "Sync: Updated event logs $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
+          git push
+        fi

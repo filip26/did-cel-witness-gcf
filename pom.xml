@@ -1,35 +1,76 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.apicatalog</groupId>
-    <artifactId>iron-did-cel</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
-    <packaging>pom</packaging> 
+	<groupId>com.apicatalog</groupId>
+	<artifactId>iron-did-cel</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
 
-    <name>Iron did:cel Agents, Services, Storage on GC</name>
-    <modules>
-        <module>witness-service</module>
-        <module>witness-agent</module>
-        <module>witness-verifier</module>
-        <module>create-service</module>
-    </modules>
-    
-    <build>
-      <pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <version>3.1.4</version>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-        </plugins>
-      </pluginManagement>
-    </build>    
+	<name>Iron did:cel Agents, Services, Storage</name>
+
+	<description>
+		An experimental, modular, composable implementation of an Oblivious
+		Witness Service and did:cel identifiers managed by Google Cloud KMS.
+	</description>
+
+	<url>https://github.com/filip26/iron-did-cel</url>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
+
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/filip26/iron-did-cel/issues</url>
+	</issueManagement>
+
+	<scm>
+		<connection>scm:git:git://github.com/filip26/iron-did-cel.git</connection>
+		<developerConnection>
+			scm:git:git://github.com/filip26/iron-did-cel.git</developerConnection>
+		<url>https://github.com/filip26/iron-did-cel/tree/main</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>filip26</id>
+			<name>Filip Kolarik</name>
+			<email>filip26@gmail.com</email>
+			<roles>
+				<role>author</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<inceptionYear>2026</inceptionYear>
+
+
+	<modules>
+		<module>witness-service</module>
+		<module>witness-verifier</module>
+		<module>witness-agent</module>
+		<module>provision-service</module>
+		<module>heartbeat-service</module>
+	</modules>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.4</version>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 </project>
