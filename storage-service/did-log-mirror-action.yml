@@ -16,13 +16,10 @@ jobs:
 
     - name: Resolve and Sync Identifiers
       run: |
-        # Define your base public HTTP endpoint here
-        BASE_URL="https://storage.googleapis.com/did-cel-log"
 		# Source - a list of did:cel identifiers separated by newline
-        SOURCES_FILE="sources.txt"
+        SOURCES_FILE="did-cel-list.txt"
 		# Where to store the mirrored logs
-        DEST_DIR="./logs"
-        mkdir -p "$DEST_DIR"
+        DEST_DIR="."
 
         if [ ! -f "$SOURCES_FILE" ]; then
           echo "Error: $SOURCES_FILE not found."
@@ -35,13 +32,12 @@ jobs:
           
           # Strip 'did:cel:' prefix to get the unique identifier
           ID=${DID#did:cel:}
-          
-          # Construct the URL (assuming the filename is ID.json or similar)
-          # Adjust the extension/path suffix as needed
-          RESOLVED_URL="$BASE_URL/$ID.json"
-          
-          echo "Syncing $DID -> $ID.json"
-          curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID.json"
+		  ID=${ID%%\?*}
+		  STORAGE=${DID#*storage=}
+		  RESOLVED_URL="$STORAGE/$ID"
+		              
+          echo "Syncing $DID -> $ID"
+          curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID"
         done < "$SOURCES_FILE"
 
         # Git Logic

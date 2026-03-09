@@ -10,8 +10,8 @@ A service for coordinating oblivious witnessing of `did:cel` event logs for `did
 {
 	"did":"did:cel:zW1...",
 	"witnessEndpoints":[
-		"https://red-witness-5qnvfghl2q-uc.a.run.app", 
-		"https://white-witness-5qnvfghl2q-ey.a.run.app"
+		"https://witness-red-5qnvfghl2q-uc.a.run.app", 
+		"https://witness-blue-5qnvfghl2q-ey.a.run.app"
 	]
 }
 ```
