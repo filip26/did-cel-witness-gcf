@@ -26,7 +26,7 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
   Orchestrates the setup of a fully operational `did:cel` identifier by coordinating provisioning, persistence, witnessing, and heartbeat scheduling. Ensures the identifier is live, persisted, and witnessed.
 
 - [Witness Agent](./witness-agent/README.md)
-  Orchestrates the oblivious witnessing process for identifiers managed via KMS and GCS.
+  Orchestrates the oblivious witnessing process for identifiers, using GCS as the event log storage.
 
 - [Heartbeat Service](./heartbeat-service/README.md)
   Generates periodic events to ensure liveness and temporal continuity of the event log.
@@ -46,8 +46,8 @@ A modular suite for managing the lifecycle of secure `did:cel` identifiers using
 - [Witness Verifier](./witness-verifier/README.md)
   Library for $O(1)$ verification of W3C VC Data Integrity witness proofs.
 
-- [`CelStorageService` Mirror Action](./storage-service/did-log-mirror-action.yml)
-  Syncs the event logs from GCS or any HTTP endpoint for the `did:cel` identifiers defined in the repository.
+- [`CelStorageService` Mirror Github Action](./storage-service/did-log-mirror-action.yml)
+  Syncs the event logs from GCS or any HTTP endpoint for the `did:cel` identifiers defined in the GitHub repository effectively turning GitHub into a `CelStorageService`.
 
 ## 🤝 Contributing
 
