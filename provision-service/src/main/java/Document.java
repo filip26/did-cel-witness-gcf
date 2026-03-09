@@ -1,13 +1,29 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
-class Document {
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutures;
+import com.google.cloud.kms.v1.CryptoKeyVersionName;
+import com.google.cloud.kms.v1.GetPublicKeyRequest;
+import com.google.cloud.kms.v1.KeyManagementServiceClient;
+import com.google.cloud.kms.v1.KeyRingName;
+import com.google.cloud.kms.v1.PublicKey;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import jakarta.json.stream.JsonParser;
+
+final class Document {
 
     private final Map<String, Object> document;
     private final String signKeyLocalId;
     private final List<Map<String, String>> keysToBind;
+
+    private PublicKey publicKey;
+    private String publicKeyMultibase;
 
     private Document(
             Map<String, Object> document,
@@ -16,12 +32,19 @@ class Document {
         this.document = document;
         this.signKeyLocalId = signKeyLocalId;
         this.keysToBind = keysToBind;
+        this.publicKey = null;
+        this.publicKeyMultibase = null;
     }
 
     // assembly initial did document
-    public static Document bind(Map<String, Object> template) {
+    public static Document read(JsonParser parser) {
 
-        var document = new LinkedHashMap<String, Object>(template);
+        if (!parser.hasNext() || parser.next() != JsonParser.Event.START_OBJECT) {
+            throw new IllegalArgumentException("Root must be a JSON object");
+        }
+
+        var document = (Map<String, Object>) processEvent(parser, JsonParser.Event.START_OBJECT);
+
         document.put("@context", List.of(
                 "https://www.w3.org/ns/did/v1.1",
                 "https://w3id.org/didcel/v1"));
@@ -71,36 +94,72 @@ class Document {
             throw new IllegalArgumentException();
         }
 
-        // TODO
         return new Document(document, signKeyLocalId, keysToBind);
     }
 
-    // assembly initial create operation
-    @Deprecated
-    public static Document newDocument(
-            String publicKeyMultibase,
-            String heartbeatFrequency,
-            List<String> storageEndpoints) {
+    public final void bindKeys(
+            KeyManagementServiceClient kms,
+            KeyRingName kmsKeyRing) throws InterruptedException, ExecutionException {
 
-        var assertionMethod = new LinkedHashMap<String, Object>(4);
+        final var futureMap = new LinkedHashMap<String, ApiFuture<List<Object>>>(keysToBind.size());
 
-        assertionMethod.put("id", "#" + publicKeyMultibase);
-        assertionMethod.put("type", "Multikey");
-        assertionMethod.put("publicKeyMultibase", publicKeyMultibase);
+        for (var kmsKey : keysToBind) {
+            var keyName = kmsKey.get("kmsKey");
+            var version = kmsKey.getOrDefault("kmsKeyVersion", "1");
+            var localKeyId = kmsKey.get("id");
 
-        var document = new LinkedHashMap<String, Object>(5);
-        document.put("@context", List.of(
-                "https://www.w3.org/ns/did/v1.1",
-                "https://w3id.org/didcel/v1"));
-        document.put("heartbeatFrequency", heartbeatFrequency);
-        document.put("assertionMethod", List.of(assertionMethod));
-        document.put("service", List.of(
-                Map.of(
-                        "type", "CelStorageService",
-                        "serviceEndpoint", storageEndpoints)));
+            if (futureMap.containsKey(localKeyId)) {
+                continue;
+            }
 
-//        return new Document(document, assertionMethod);
-        return null;
+            final var resourceName = CryptoKeyVersionName.format(
+                    kmsKeyRing.getProject(),
+                    kmsKeyRing.getLocation(),
+                    kmsKeyRing.getKeyRing(),
+                    keyName,
+                    version);
+
+            futureMap.put(localKeyId, ApiFutures.transform(
+                    kms
+                            .getPublicKeyCallable()
+                            .futureCall(GetPublicKeyRequest.newBuilder().setName(resourceName).build()),
+                    publicKey -> List.of(publicKey, EventLog.publicKeyMultibase(publicKey)),
+                    MoreExecutors.directExecutor()));
+        }
+
+        // Combine all individual string futures into one list future
+        ApiFutures.allAsList(futureMap.values()).get();
+
+        List<Object> signKey = null;
+
+        for (var kmsKey : keysToBind) {
+
+            var localKeyId = kmsKey.get("id");
+
+            try {
+
+                // This .get() is safe and non-blocking because allAsList has completed
+                var mapping = futureMap.get(localKeyId).get();
+
+                if (localKeyId == signKeyLocalId) {
+                    signKey = mapping;
+                }
+
+                Document.overrideWithMultikey(kmsKey, (String) mapping.get(2));
+            } catch (InterruptedException | ExecutionException e) {
+                // This should technically not happen since the parent future succeeded
+                throw new RuntimeException("Failed to retrieve pre-resolved future", e);
+            }
+        }
+
+        if (signKey == null) {
+            throw new IllegalArgumentException("Missing assertionMethod KMS key.");
+        }
+
+        final var it = signKey.iterator();
+
+        this.publicKey = (PublicKey) it.next();
+        this.publicKeyMultibase = (String) it.next();
     }
 
     public Map<String, Object> update(String did) {
@@ -115,22 +174,57 @@ class Document {
         return document;
     }
 
-    public String signKeyLocalId() {
-        return signKeyLocalId;
+    private static Object processEvent(JsonParser parser, JsonParser.Event event) {
+        return switch (event) {
+        case START_OBJECT -> {
+            // Use HashMap for 10-15% better performance over LinkedHashMap
+            var map = new HashMap<String, Object>();
+            while (parser.hasNext()) {
+                var next = parser.next();
+                if (next == JsonParser.Event.END_OBJECT)
+                    break;
+                // In OBJECT context, next is always KEY_NAME
+                String key = parser.getString();
+                map.put(key, processEvent(parser, parser.next()));
+            }
+            yield map;
+        }
+        case START_ARRAY -> {
+            var list = new ArrayList<>();
+            while (parser.hasNext()) {
+                var next = parser.next();
+                if (next == JsonParser.Event.END_ARRAY)
+                    break;
+                list.add(processEvent(parser, next));
+            }
+            yield list;
+        }
+        case VALUE_STRING -> parser.getString();
+        case VALUE_NUMBER -> parser.getBigDecimal();
+        case VALUE_TRUE -> Boolean.TRUE;
+        case VALUE_FALSE -> Boolean.FALSE;
+        case VALUE_NULL -> null;
+        default -> null;
+        };
     }
 
-    public List<Map<String, String>> getKeysToBind() {
-        return keysToBind;
-    }
-
-    public static void setMultikey(Map<String, String> holder, String publicKeyMultibase) {
-        holder.clear();
-        holder.put("id", "#" + publicKeyMultibase);
-        holder.put("type", "Multikey");
-        holder.put("publicKeyMultibase", publicKeyMultibase);
+    private static void overrideWithMultikey(Map<String, String> map, String publicKeyMultibase) {
+        map.clear();
+        map.put("id", "#" + publicKeyMultibase);
+        map.put("type", "Multikey");
+        map.put("publicKeyMultibase", publicKeyMultibase);
     }
 
     private static String keyLocalId(Map<String, String> kmsKey) {
         return kmsKey.get("kmsKey") + "/" + kmsKey.getOrDefault("kmsKeyVersion", "1");
     }
+
+    public PublicKey publicKey() {
+        return publicKey;
+    }
+
+    public String publicKeyMultibase() {
+        return publicKeyMultibase;
+    }
+
 }

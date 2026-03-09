@@ -1,32 +1,22 @@
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 import com.apicatalog.tree.io.jakarta.JakartaGenerator;
 import com.apicatalog.tree.io.java.JavaAdapter;
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutures;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
-import com.google.cloud.kms.v1.CryptoKeyVersionName;
-import com.google.cloud.kms.v1.GetPublicKeyRequest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
-import com.google.cloud.kms.v1.PublicKey;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import jakarta.json.Json;
 import jakarta.json.JsonException;
 import jakarta.json.stream.JsonGeneratorFactory;
-import jakarta.json.stream.JsonParser;
 import jakarta.json.stream.JsonParserFactory;
 
 public class ProvisionService implements HttpFunction {
@@ -90,11 +80,7 @@ public class ProvisionService implements HttpFunction {
 
         try (final var parser = JSON_PARSER_FACTORY.createParser(request.getInputStream())) {
 
-            if (!parser.hasNext() || parser.next() != JsonParser.Event.START_OBJECT) {
-                sendError(response, 400, "Bad Request", "Root must be a JSON object");
-            }
-
-            document = Document.bind((Map<String, Object>) processEvent(parser, JsonParser.Event.START_OBJECT));
+            document = Document.read(parser);
 
         } catch (JsonException | IllegalArgumentException e) {
             sendError(response, 400, "Bad Request", e.getMessage());
@@ -107,13 +93,7 @@ public class ProvisionService implements HttpFunction {
 
         try {
 
-            final var signKeyMapping = bindKeys(
-                    document.signKeyLocalId(),
-                    document.getKeysToBind()).iterator();
-
-            final var keyResourceName = (String) signKeyMapping.next();
-            final var publicKey = (PublicKey) signKeyMapping.next();
-            final var publicKeyMultibase = (String) signKeyMapping.next();
+            document.bindKeys(KMS_CLIENT, KEY_RING);
 
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
@@ -131,10 +111,10 @@ public class ProvisionService implements HttpFunction {
             final var event = new LinkedHashMap<String, Object>();
             event.put("operation", operation);
 
-            // DI proof verification method
-            final var verificationMethod = did + "#" + publicKeyMultibase;
+            // proof verification method
+            final var verificationMethod = did + "#" + document.publicKeyMultibase();
 
-            final var suite = CryptoSuite.newSuite(publicKey.getAlgorithm(), KMS_CLIENT, keyResourceName);
+            final var suite = CryptoSuite.newSuite(document.publicKey(), KMS_CLIENT);
 
             // sign the event
             final var proof = suite.sign(event, verificationMethod);
@@ -173,96 +153,5 @@ public class ProvisionService implements HttpFunction {
                     .write("message", message)
                     .writeEnd();
         }
-    }
-
-    private static Object processEvent(JsonParser parser, JsonParser.Event event) {
-        return switch (event) {
-        case START_OBJECT -> {
-            // Use HashMap for 10-15% better performance over LinkedHashMap
-            var map = new HashMap<String, Object>();
-            while (parser.hasNext()) {
-                var next = parser.next();
-                if (next == JsonParser.Event.END_OBJECT)
-                    break;
-                // In OBJECT context, next is always KEY_NAME
-                String key = parser.getString();
-                map.put(key, processEvent(parser, parser.next()));
-            }
-            yield map;
-        }
-        case START_ARRAY -> {
-            var list = new ArrayList<>();
-            while (parser.hasNext()) {
-                var next = parser.next();
-                if (next == JsonParser.Event.END_ARRAY)
-                    break;
-                list.add(processEvent(parser, next));
-            }
-            yield list;
-        }
-        case VALUE_STRING -> parser.getString();
-        case VALUE_NUMBER -> parser.getBigDecimal();
-        case VALUE_TRUE -> Boolean.TRUE;
-        case VALUE_FALSE -> Boolean.FALSE;
-        case VALUE_NULL -> null;
-        default -> null;
-        };
-    }
-
-    private static final List<Object> bindKeys(
-            String signKeyLocalId,
-            List<Map<String, String>> kmsKeys) throws InterruptedException, ExecutionException {
-
-        final var futureMap = new LinkedHashMap<String, ApiFuture<List<Object>>>(kmsKeys.size());
-
-        for (var kmsKey : kmsKeys) {
-            var keyName = kmsKey.get("kmsKey");
-            var version = kmsKey.getOrDefault("kmsKeyVersion", "1");
-            var localKeyId = kmsKey.get("id");
-
-            if (futureMap.containsKey(localKeyId)) {
-                continue;
-            }
-
-            final var resourceName = CryptoKeyVersionName.format(
-                    KEY_RING.getProject(),
-                    KEY_RING.getLocation(),
-                    KEY_RING.getKeyRing(),
-                    keyName,
-                    version);
-
-            futureMap.put(localKeyId, ApiFutures.transform(
-                    KMS_CLIENT
-                            .getPublicKeyCallable()
-                            .futureCall(GetPublicKeyRequest.newBuilder().setName(resourceName).build()),
-                    publicKey -> List.of(resourceName, publicKey, EventLog.publicKeyMultibase(publicKey)),
-                    MoreExecutors.directExecutor()));
-        }
-
-        // Combine all individual string futures into one list future
-        ApiFutures.allAsList(futureMap.values()).get();
-
-        List<Object> signKey = null;
-
-        for (var kmsKey : kmsKeys) {
-            
-            var localKeyId = kmsKey.get("id");
-
-            try {
-
-                // This .get() is safe and non-blocking because allAsList has completed
-                var mapping = futureMap.get(localKeyId).get();
-
-                if (localKeyId == signKeyLocalId) {
-                    signKey = mapping;
-                }
-
-                Document.setMultikey(kmsKey, (String) mapping.get(2));
-            } catch (InterruptedException | ExecutionException e) {
-                // This should technically not happen since the parent future succeeded
-                throw new RuntimeException("Failed to retrieve pre-resolved future", e);
-            }
-        }
-        return signKey;
     }
 }
