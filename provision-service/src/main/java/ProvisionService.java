@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.apicatalog.tree.io.jakarta.JakartaGenerator;
 import com.apicatalog.tree.io.java.JavaAdapter;
@@ -123,7 +124,12 @@ public class ProvisionService implements HttpFunction {
             event.put("proof", proof);
 
             // assembly initial log
-            final var log = Map.of("log", List.of(Map.of("event", event)));
+            final var log = Map.of(
+                    "keys",
+                    document.getKeyMap().entrySet().stream()
+                            .collect(Collectors.toMap(e -> "#" + e.getKey(), e -> e.getValue().getName())),
+                    "log",
+                    List.of(Map.of("event", event)));
 
             response.setStatusCode(200, "OK");
             response.setContentType("application/json");

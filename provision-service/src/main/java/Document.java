@@ -21,9 +21,9 @@ class Document {
     private final Map<String, Object> document;
     private final String signKeyLocalId;
     private final List<Map<String, String>> keysToBind;
-
-    private PublicKey publicKey;
-    private String publicKeyMultibase;
+    
+    private Map<String, PublicKey> idToKey;
+    private Map.Entry<String, PublicKey> signKey;
 
     private Document(
             Map<String, Object> document,
@@ -32,8 +32,8 @@ class Document {
         this.document = document;
         this.signKeyLocalId = signKeyLocalId;
         this.keysToBind = keysToBind;
-        this.publicKey = null;
-        this.publicKeyMultibase = null;
+        this.idToKey = null;
+        this.signKey = null;
     }
 
     // assembly initial did document
@@ -56,6 +56,14 @@ class Document {
             }
             String key = parser.getString();
             document.put(key, processEvent(parser, parser.next()));
+        }
+
+        if (!document.containsKey("assertionMethod")) {
+            throw new IllegalArgumentException("The assertionMethod is not defined.");
+        }
+
+        if (!document.containsKey("service")) {
+            throw new IllegalArgumentException("A service is not defined.");
         }
 
         String signKeyLocalId = null;
@@ -87,9 +95,7 @@ class Document {
                         if ("assertionMethod".equals(entry.getKey())) {
                             signKeyLocalId = localId;
                         }
-
                         keyMap.put("id", localId);
-
                         keysToBind.add(keyMap);
                     }
                 }
@@ -110,7 +116,7 @@ class Document {
             KeyManagementServiceClient kms,
             KeyRingName kmsKeyRing) throws InterruptedException, ExecutionException {
 
-        final var futureMap = new LinkedHashMap<String, ApiFuture<List<Object>>>(keysToBind.size());
+        final var futureMap = new LinkedHashMap<String, ApiFuture<Map.Entry<String, PublicKey>>>(keysToBind.size());
 
         for (var kmsKey : keysToBind) {
             var keyName = kmsKey.get("kmsKey");
@@ -132,14 +138,12 @@ class Document {
                     kms
                             .getPublicKeyCallable()
                             .futureCall(GetPublicKeyRequest.newBuilder().setName(resourceName).build()),
-                    publicKey -> List.of(publicKey, EventLog.publicKeyMultibase(publicKey)),
+                    publicKey -> Map.entry(EventLog.publicKeyMultibase(publicKey), publicKey),
                     MoreExecutors.directExecutor()));
         }
 
         // Combine all individual string futures into one list future
         ApiFutures.allAsList(futureMap.values()).get();
-
-        List<Object> signKey = null;
 
         for (var kmsKey : keysToBind) {
 
@@ -154,7 +158,7 @@ class Document {
                     signKey = mapping;
                 }
 
-                Document.overrideWithMultikey(kmsKey, (String) mapping.get(1));
+                Document.overrideWithMultikey(kmsKey, mapping.getKey());
             } catch (InterruptedException | ExecutionException e) {
                 // This should technically not happen since the parent future succeeded
                 throw new RuntimeException("Failed to retrieve pre-resolved future", e);
@@ -164,11 +168,6 @@ class Document {
         if (signKey == null) {
             throw new IllegalArgumentException("Missing assertionMethod KMS key.");
         }
-
-        final var it = signKey.iterator();
-
-        this.publicKey = (PublicKey) it.next();
-        this.publicKeyMultibase = (String) it.next();
     }
 
     public Map<String, Object> update(String did) {
@@ -231,10 +230,14 @@ class Document {
     }
 
     public PublicKey publicKey() {
-        return publicKey;
+        return signKey.getValue();
     }
 
     public String publicKeyMultibase() {
-        return publicKeyMultibase;
+        return signKey.getKey();
+    }
+    
+    public Map<String, PublicKey> getKeyMap() {
+        return idToKey;
     }
 }
