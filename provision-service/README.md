@@ -55,7 +55,10 @@ HTTP/2 200 OK
 content-type: application/json
 
 {
-  Initial Event Log
+  "keys": {
+    "#key_id": "KMS_KEY_RESOURCE_PATH"
+  },
+  "log": Initial Event Log
 }
 ```
 

@@ -91,7 +91,7 @@
 			<artifactId>copper-multibase</artifactId>
 			<version>4.1.0</version>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>copper-multicodec</artifactId>
 			<version>2.4.0</version>
@@ -118,25 +118,6 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.5</version>
-			</plugin>
-
-			<plugin>
-				<!--
-          Google Cloud Functions Framework Maven plugin
-
-          This plugin allows you to run Cloud Functions Java code
-          locally. Use the following terminal command to run a
-          given function locally:
-
-          mvn function:run -Drun.functionTarget=your.package.yourFunction
-        -->
-				<groupId>com.google.cloud.functions</groupId>
-				<artifactId>function-maven-plugin</artifactId>
-				<version>1.0.0</version>
-				<!--                <configuration>-->
-				<!--
-                <functionTarget>com.apicatalog.vc.fnc.VerifyFunction</functionTarget>-->
-				<!--                </configuration>-->
 			</plugin>
 		</plugins>
 	</build>

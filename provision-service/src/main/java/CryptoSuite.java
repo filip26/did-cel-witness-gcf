@@ -23,7 +23,7 @@ import com.google.protobuf.ByteString;
  * computation, and signing.
  *
  */
-public final class CryptoSuite {
+class CryptoSuite {
 
     @FunctionalInterface
     private interface Signer {

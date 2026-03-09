@@ -16,7 +16,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import jakarta.json.stream.JsonParser;
 
-final class Document {
+class Document {
 
     private final Map<String, Object> document;
     private final String signKeyLocalId;
@@ -43,11 +43,20 @@ final class Document {
             throw new IllegalArgumentException("Root must be a JSON object");
         }
 
-        var document = (Map<String, Object>) processEvent(parser, JsonParser.Event.START_OBJECT);
+        var document = new LinkedHashMap<String, Object>();
 
         document.put("@context", List.of(
                 "https://www.w3.org/ns/did/v1.1",
                 "https://w3id.org/didcel/v1"));
+
+        while (parser.hasNext()) {
+            var next = parser.next();
+            if (next == JsonParser.Event.END_OBJECT) {
+                break;
+            }
+            String key = parser.getString();
+            document.put(key, processEvent(parser, parser.next()));
+        }
 
         String signKeyLocalId = null;
         List<Map<String, String>> keysToBind = new ArrayList<>();
@@ -91,7 +100,7 @@ final class Document {
         }
 
         if (signKeyLocalId == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Missing assertionMethod KMS key.");
         }
 
         return new Document(document, signKeyLocalId, keysToBind);
@@ -145,7 +154,7 @@ final class Document {
                     signKey = mapping;
                 }
 
-                Document.overrideWithMultikey(kmsKey, (String) mapping.get(2));
+                Document.overrideWithMultikey(kmsKey, (String) mapping.get(1));
             } catch (InterruptedException | ExecutionException e) {
                 // This should technically not happen since the parent future succeeded
                 throw new RuntimeException("Failed to retrieve pre-resolved future", e);
@@ -181,8 +190,9 @@ final class Document {
             var map = new HashMap<String, Object>();
             while (parser.hasNext()) {
                 var next = parser.next();
-                if (next == JsonParser.Event.END_OBJECT)
+                if (next == JsonParser.Event.END_OBJECT) {
                     break;
+                }
                 // In OBJECT context, next is always KEY_NAME
                 String key = parser.getString();
                 map.put(key, processEvent(parser, parser.next()));
@@ -193,8 +203,9 @@ final class Document {
             var list = new ArrayList<>();
             while (parser.hasNext()) {
                 var next = parser.next();
-                if (next == JsonParser.Event.END_ARRAY)
+                if (next == JsonParser.Event.END_ARRAY) {
                     break;
+                }
                 list.add(processEvent(parser, next));
             }
             yield list;
@@ -226,5 +237,4 @@ final class Document {
     public String publicKeyMultibase() {
         return publicKeyMultibase;
     }
-
 }
