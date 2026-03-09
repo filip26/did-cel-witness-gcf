@@ -16,33 +16,26 @@ jobs:
 
     - name: Resolve and Sync Identifiers
       run: |
-        # Define your base public HTTP endpoint here
-        BASE_URL="https://storage.googleapis.com/did-cel-log"
-		# Source - a list of did:cel identifiers separated by newline
-        SOURCES_FILE="sources.txt"
-		# Where to store the mirrored logs
-        DEST_DIR="./logs"
-        mkdir -p "$DEST_DIR"
+        SOURCES_FILE="did-cel-list.txt"
+        DEST_DIR="."
 
         if [ ! -f "$SOURCES_FILE" ]; then
           echo "Error: $SOURCES_FILE not found."
           exit 1
         fi
 
-        while IFS= read -r DID || [ -n "$DID" ]; do
-          # Skip empty lines and comments
-          [[ -z "$DID" || "$DID" =~ ^# ]] && continue
-          
-          # Strip 'did:cel:' prefix to get the unique identifier
-          ID=${DID#did:cel:}
-          
-          # Construct the URL (assuming the filename is ID.json or similar)
-          # Adjust the extension/path suffix as needed
-          RESOLVED_URL="$BASE_URL/$ID.json"
-          
-          echo "Syncing $DID -> $ID.json"
-          curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID.json"
-        done < "$SOURCES_FILE"
+		while IFS= read -r DID || [ -n "$DID" ]; do
+		  # Skip empty lines and comments
+		  [[ -z "$DID" || "$DID" =~ ^# ]] && continue
+		  
+		  # Strip 'did:cel:' prefix to get the unique identifier
+		  ID=${DID#did:cel:}
+		  ID=${ID%%\?*}          
+		  STORAGE=${DID#*storage=}
+		  RESOLVED_URL="$STORAGE$ID"
+		  echo "Syncing $DID -> $ID"
+		  curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID"
+		done < "$SOURCES_FILE"
 
         # Git Logic
         git config user.name "github-actions[bot]"

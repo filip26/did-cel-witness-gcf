@@ -22,12 +22,12 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD
 Endpoints are organized by algorithm, region, and status.
 
 #### `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
-- `https://red-witness-5qnvfghl2q-uc.a.run.app`
-- Verification Method: `did:key` (used for simplicity)  
+- `https://witness-red-5qnvfghl2q-uc.a.run.app`
+- Verification Method: `did:cel` 
 - Status: Active
 
 #### `eddsa-rdfc-2022`, `256bit`, `europe-west3`
-- `https://white-witness-5qnvfghl2q-ey.a.run.app`
+- `https://witness-blue-5qnvfghl2q-ey.a.run.app`
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
 

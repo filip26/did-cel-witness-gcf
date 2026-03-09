@@ -7,3 +7,4 @@
 /bin/
 /log-template.json
 *.log
+*.txt

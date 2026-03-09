@@ -13,9 +13,9 @@ import com.apicatalog.multibase.Multibase;
 import com.apicatalog.tree.io.TreeIOException;
 import com.apicatalog.tree.io.java.JavaAdapter;
 import com.google.cloud.kms.v1.AsymmetricSignRequest;
-import com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionAlgorithm;
 import com.google.cloud.kms.v1.Digest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
+import com.google.cloud.kms.v1.PublicKey;
 import com.google.protobuf.ByteString;
 
 /**
@@ -23,7 +23,7 @@ import com.google.protobuf.ByteString;
  * computation, and signing.
  *
  */
-public final class CryptoSuite {
+class CryptoSuite {
 
     @FunctionalInterface
     private interface Signer {
@@ -61,17 +61,16 @@ public final class CryptoSuite {
      * Creates a new {@link CryptoSuite} instance for the specified KMS algorithm
      */
     public static CryptoSuite newSuite(
-            CryptoKeyVersionAlgorithm algorithm,
-            KeyManagementServiceClient kms,
-            String resource) {
+            PublicKey publicKey,
+            KeyManagementServiceClient kms) {
 
-        return switch (algorithm) {
+        return switch (publicKey.getAlgorithm()) {
         case EC_SIGN_P256_SHA256 -> new CryptoSuite(
                 "ecdsa-jcs-2019",
                 32,
                 CryptoSuite::ec256Sign,
                 kms,
-                resource,
+                publicKey.getName(),
                 "SHA-256");
 
         case EC_SIGN_P384_SHA384 -> new CryptoSuite(
@@ -79,7 +78,7 @@ public final class CryptoSuite {
                 48,
                 CryptoSuite::ec384Sign,
                 kms,
-                resource,
+                publicKey.getName(),
                 "SHA-384");
 
         case EC_SIGN_ED25519 -> new CryptoSuite(
@@ -87,11 +86,11 @@ public final class CryptoSuite {
                 32,
                 CryptoSuite::ed256Sign,
                 kms,
-                resource,
+                publicKey.getName(),
                 "SHA-256");
 
         default ->
-            throw new IllegalStateException("Unsupported KMS Key Algorithm [" + algorithm + "]");
+            throw new IllegalStateException("Unsupported KMS Key Algorithm [" + publicKey.getAlgorithm() + "]");
         };
     }
 
