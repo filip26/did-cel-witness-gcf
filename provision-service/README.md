@@ -32,16 +32,14 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
   	"kmsKeyVersion": "..."
   }],
   "authenticationMethod": [{
-  	"kmsKey": "...",
-  	"kmsKeyVersion": "..."  
-  }, {
-	...
+
   }],
-  ...
+
   "service": [{
   	  "type": "CelStorageService",
   	  "serviceEndpoint": [
-  	     "https://storage.googleapis.com/did-cel-log/"
+  	     "https://storage.googleapis.com/did-cel-log/",
+  	     "..."
   	  ]
      }
   }]
