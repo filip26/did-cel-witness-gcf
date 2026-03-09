@@ -16,9 +16,7 @@ jobs:
 
     - name: Resolve and Sync Identifiers
       run: |
-		# Source - a list of did:cel identifiers separated by newline
         SOURCES_FILE="did-cel-list.txt"
-		# Where to store the mirrored logs
         DEST_DIR="."
 
         if [ ! -f "$SOURCES_FILE" ]; then
@@ -26,19 +24,18 @@ jobs:
           exit 1
         fi
 
-        while IFS= read -r DID || [ -n "$DID" ]; do
-          # Skip empty lines and comments
-          [[ -z "$DID" || "$DID" =~ ^# ]] && continue
-          
-          # Strip 'did:cel:' prefix to get the unique identifier
-          ID=${DID#did:cel:}
-		  ID=${ID%%\?*}
+		while IFS= read -r DID || [ -n "$DID" ]; do
+		  # Skip empty lines and comments
+		  [[ -z "$DID" || "$DID" =~ ^# ]] && continue
+		  
+		  # Strip 'did:cel:' prefix to get the unique identifier
+		  ID=${DID#did:cel:}
+		  ID=${ID%%\?*}          
 		  STORAGE=${DID#*storage=}
-		  RESOLVED_URL="$STORAGE/$ID"
-		              
-          echo "Syncing $DID -> $ID"
-          curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID"
-        done < "$SOURCES_FILE"
+		  RESOLVED_URL="$STORAGE$ID"
+		  echo "Syncing $DID -> $ID"
+		  curl -sL "$RESOLVED_URL" -o "$DEST_DIR/$ID"
+		done < "$SOURCES_FILE"
 
         # Git Logic
         git config user.name "github-actions[bot]"
