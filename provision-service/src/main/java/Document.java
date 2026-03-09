@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutures;
@@ -22,7 +23,7 @@ class Document {
     private final String signKeyLocalId;
     private final List<Map<String, String>> keysToBind;
     
-    private Map<String, PublicKey> idToKey;
+    private Map<String, String> idToKeyName;
     private Map.Entry<String, PublicKey> signKey;
 
     private Document(
@@ -32,7 +33,7 @@ class Document {
         this.document = document;
         this.signKeyLocalId = signKeyLocalId;
         this.keysToBind = keysToBind;
-        this.idToKey = null;
+        this.idToKeyName = null;
         this.signKey = null;
     }
 
@@ -143,7 +144,9 @@ class Document {
         }
 
         // Combine all individual string futures into one list future
-        ApiFutures.allAsList(futureMap.values()).get();
+        idToKeyName = ApiFutures.allAsList(futureMap.values()).get().stream()
+                .collect(Collectors.toMap(e -> "#" + e.getKey(), e -> e.getValue().getName()))
+                ;
 
         for (var kmsKey : keysToBind) {
 
@@ -237,7 +240,7 @@ class Document {
         return signKey.getKey();
     }
     
-    public Map<String, PublicKey> getKeyMap() {
-        return idToKey;
+    public Map<String, String> getKeyMap() {
+        return idToKeyName;
     }
 }
