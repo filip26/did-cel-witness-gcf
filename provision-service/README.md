@@ -6,7 +6,7 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 
 #### Request
 
-- `assertionMethod.id` (required)  
+- `assertionMethod` (required)  
   Identifier of the Google Cloud KMS signing key used as the `did:cel` assertion method.
 
   The key must use one of the following supported algorithms:
@@ -49,22 +49,18 @@ A request example using the referenced `verificationMethod` and provisioning add
   "verificationMethod": [{
     "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
    }],  
-   
   "assertionMethod": [
     "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
   ],
-  
   "authentication": [
     "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
     {
 
     }
   ],
-  
   "recovery": [{
     "id": "kms:KMS_KEY_2_ID/cryptoKeyVersions/KMS_KEY_2_VERSION"
   }],
-	
   "service": [{
     "type": "CelStorageService",
     "serviceEndpoint": [
@@ -83,7 +79,7 @@ content-type: application/json
 
 {
   "keys": {
-    "#keyId": "KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+    "#keyId": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
   },
   "log": {
     Initial Event Log
@@ -130,4 +126,16 @@ gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
   --role="roles/cloudkms.signer"
 ```
 
+### Deployment
+ 
+```bash
+ gcloud functions deploy FUNCTION-NAME \
+  --gen2 \
+  --runtime=java25 \
+  --source=. \
+  --entry-point=ProvisionService \
+  --trigger-http \
+  --service-account=SA-NAME@PROJECT_ID.iam.gserviceaccount.com
+  --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING"
+```
 

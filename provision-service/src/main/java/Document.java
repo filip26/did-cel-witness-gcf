@@ -1,8 +1,8 @@
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -23,7 +23,7 @@ class Document {
 
     private final String assertionKmsKeyId;
     private final List<Map<String, String>> kmsKeys;
-    private final Map<String, Consumer<String>> kmsKeyRefs;
+    private final List<Entry<String, Consumer<String>>> kmsKeyRefs;
 
     private Map<String, String> keyMap;
     private Map.Entry<String, PublicKey> assertionKey;
@@ -32,7 +32,7 @@ class Document {
             Map<String, Object> document,
             String assertionKmsKeyId,
             List<Map<String, String>> kmsKeys,
-            Map<String, Consumer<String>> kmsKeyRefs) {
+            List<Entry<String, Consumer<String>>> kmsKeyRefs) {
         this.document = document;
         this.assertionKmsKeyId = assertionKmsKeyId;
         this.kmsKeys = kmsKeys;
@@ -74,7 +74,7 @@ class Document {
         String assertionKmsKeyId = null;
 
         final var kmsKeys = new ArrayList<Map<String, String>>();
-        final var kmsKeyRefs = new HashMap<String, Consumer<String>>();
+        final var kmsKeyRefs = new ArrayList<Entry<String, Consumer<String>>>();
 
         if (!document.containsKey("heartbeatFrequency")) {
             document.put("heartbeatFrequency", "P3M");
@@ -85,6 +85,10 @@ class Document {
             switch (entry.getKey()) {
             case "assertionMethod",
                     "authentication",
+                    "verificationMethod",
+                    "keyAgreement",
+                    "capabilityInvocation",
+                    "capabilityDelegation",
                     "recovery":
 
                 final List<Object> values;
@@ -103,10 +107,10 @@ class Document {
                             assertionKmsKeyId = keyRef;
                         }
                         final var refIndex = index;
-                        kmsKeyRefs.put(keyRef, ref -> values.set(refIndex, ref));
+                        kmsKeyRefs.add(Map.entry(keyRef, ref -> values.set(refIndex, ref)));
 
                     } else if (value instanceof Map keyMap
-                            && keyMap.getOrDefault("id", "") instanceof String keyRef
+                            && keyMap.get("id") instanceof String keyRef
                             && keyRef.startsWith("kms:")) {
 
                         if ("assertionMethod".equals(entry.getKey())) {
@@ -157,7 +161,7 @@ class Document {
         keyMap = ApiFutures.allAsList(futureMap.values()).get().stream()
                 .collect(Collectors.toMap(
                         e -> "#" + e.getKey(),
-                        e -> e.getValue()
+                        e -> "kms:" + e.getValue()
                                 .getName()
                                 .substring(
                                         kmsKeyRing.toString().length()
@@ -178,17 +182,24 @@ class Document {
                 Document.overrideWithMultikey(kmsKey, keyEntry.getKey());
             }
 
-            for (var kmsKeyRef : kmsKeyRefs.entrySet()) {
+            for (var kmsKeyRef : kmsKeyRefs) {
 
-                var keyEntry = futureMap.get(kmsKeyRef.getKey()).get();
+                var future = futureMap.get(kmsKeyRef.getKey());
+
+                if (future == null) {
+                    throw new IllegalArgumentException(
+                            "An unknown relative verification method reference [" + kmsKeyRef.getKey() + "]");
+                }
+
+                var keyEntry = future.get();
 
                 if (kmsKeyRef.getKey() == assertionKmsKeyId) {
                     assertionKey = keyEntry;
                 }
 
-                kmsKeyRef.getValue().accept(keyEntry.getKey());
-
+                kmsKeyRef.getValue().accept("#" + keyEntry.getKey());
             }
+
         } catch (InterruptedException | ExecutionException e) {
             // This should technically not happen since the parent future succeeded
             throw new RuntimeException("Failed to retrieve pre-resolved future", e);
