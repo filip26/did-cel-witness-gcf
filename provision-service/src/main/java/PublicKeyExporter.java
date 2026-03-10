@@ -1,6 +1,4 @@
 
-import com.google.cloud.kms.v1.CryptoKeyVersionName;
-import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -10,7 +8,30 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+import com.apicatalog.multibase.Multibase;
+import com.apicatalog.multicodec.codec.KeyCodec;
+import com.google.cloud.kms.v1.CryptoKeyVersionName;
+import com.google.cloud.kms.v1.KeyManagementServiceClient;
+
 class PublicKeyExporter {
+
+    // returns public key encoded as multibase/multicodec
+    public static String publicKeyMultibase(com.google.cloud.kms.v1.PublicKey publicKey) {
+
+        return Multibase.BASE_58_BTC.encode(switch (publicKey.getAlgorithm()) {
+        case EC_SIGN_P256_SHA256 -> KeyCodec.P256_PUBLIC_KEY.encode(
+                PublicKeyExporter.exportRawECKey(publicKey));
+
+        case EC_SIGN_P384_SHA384 -> KeyCodec.P384_PUBLIC_KEY.encode(
+                PublicKeyExporter.exportRawECKey(publicKey));
+
+        case EC_SIGN_ED25519 -> KeyCodec.ED25519_PUBLIC_KEY.encode(
+                PublicKeyExporter.exportRawEDKey(publicKey));
+
+        default ->
+            throw new IllegalArgumentException("Unsupported key type [" + publicKey + "]");
+        });
+    }
 
     public static byte[] exportRawEDKey(com.google.cloud.kms.v1.PublicKey publicKey) {
 

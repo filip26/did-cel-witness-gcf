@@ -1,35 +1,17 @@
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.apicatalog.jcs.Jcs;
 import com.apicatalog.multibase.Multibase;
-import com.apicatalog.multicodec.codec.KeyCodec;
 import com.apicatalog.multicodec.codec.MultihashCodec;
 import com.apicatalog.tree.io.TreeIOException;
 import com.apicatalog.tree.io.java.JavaAdapter;
-import com.google.cloud.kms.v1.PublicKey;
 
 class EventLog {
-
-    // returns public key encoded as multibase/multicodec
-    public static String publicKeyMultibase(PublicKey publicKey) {
-
-        return Multibase.BASE_58_BTC.encode(switch (publicKey.getAlgorithm()) {
-        case EC_SIGN_P256_SHA256 -> KeyCodec.P256_PUBLIC_KEY.encode(
-                PublicKeyExporter.exportRawECKey(publicKey));
-
-        case EC_SIGN_P384_SHA384 -> KeyCodec.P384_PUBLIC_KEY.encode(
-                PublicKeyExporter.exportRawECKey(publicKey));
-
-        case EC_SIGN_ED25519 -> KeyCodec.ED25519_PUBLIC_KEY.encode(
-                PublicKeyExporter.exportRawEDKey(publicKey));
-
-        default ->
-            throw new IllegalArgumentException("Unsupported key type [" + publicKey + "]");
-        });
-    }
 
     public static String methodSpecificId(Map<String, Object> document) {
 
@@ -52,8 +34,13 @@ class EventLog {
     // assembly initial create operation
     public static Map<String, Object> newOperation(String type, Map<String, Object> document) {
         return Map.of(
-                        "type", type,
-                        "data", document);
+                "type", type,
+                "data", document);
     }
 
+    public static Map<String, List<Map<String, Map<String, Object>>>> newLog(LinkedHashMap<String, Object> event) {
+        return Map.of(
+                "log",
+                List.of(Map.of("event", event)));
+    }
 }

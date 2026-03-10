@@ -156,7 +156,7 @@ class Document {
                     publicKey -> Map.entry(
                             kmsKeyId,
                             Map.entry(
-                                    "#" + EventLog.publicKeyMultibase(publicKey),
+                                    "#" + PublicKeyExporter.publicKeyMultibase(publicKey),
                                     publicKey)),
                     MoreExecutors.directExecutor()));
         }
