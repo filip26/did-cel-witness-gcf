@@ -24,9 +24,10 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
   ISO-8601 duration specifying how often heartbeat events should be generated.  
   Default: `P3M`.
 
+The minimum request example:
+
 ```json
 {
-  "heartbeatFrequency": "P3M",
   "assertionMethod": [{
     "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
   }],	
@@ -40,7 +41,7 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 }
 ```
 
-A complex example using referenced `verificationMethod`:
+A request example using the referenced `verificationMethod` and provisioning additional keys:
 
 ```json
 {
@@ -48,15 +49,21 @@ A complex example using referenced `verificationMethod`:
   "verificationMethod": [{
     "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
    }],  
+   
   "assertionMethod": [
     "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
   ],
+  
   "authentication": [
     "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
     {
-	
+
     }
   ],
+  
+  "recovery": [{
+    "id": "kms:KMS_KEY_2_ID/cryptoKeyVersions/KMS_KEY_2_VERSION"
+  }],
 	
   "service": [{
     "type": "CelStorageService",
@@ -67,8 +74,6 @@ A complex example using referenced `verificationMethod`:
   }]
 }
 ```
-
-
 
 #### Response
 
