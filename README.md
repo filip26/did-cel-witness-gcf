@@ -7,7 +7,7 @@ This repository provides services, agents, and libraries for creating, managing,
 
 ## 🛡️ Oblivious Witness Service
 
-[Oblivious Witness Service](./witness-service)
+[Oblivious Witness Service](./witness-service/README.md)
 
 Performs oblivious witnessing of event log. Issues signed and timestamped attestations over event log hashes using Google Cloud KMS in a serverless environment. Processes only cryptographic hashes and never accesses event log contents, preserving privacy while producing verifiable W3C VC Data Integrity witness proofs. 
 

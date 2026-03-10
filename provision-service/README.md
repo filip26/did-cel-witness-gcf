@@ -6,7 +6,7 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 
 #### Request
 
-- `assertionMethod` (required)  
+- `assertionMethod.id` (required)  
   Identifier of the Google Cloud KMS signing key used as the `did:cel` assertion method.
 
   The key must use one of the following supported algorithms:
@@ -27,24 +27,48 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
 ```json
 {
   "heartbeatFrequency": "P3M",
-  "assertionMethod": [{ 
-  	"kmsKey": "...",
-  	"kmsKeyVersion": "..."
-  }],
-  "authenticationMethod": [{
-
-  }],
-
+  "assertionMethod": [{
+    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+  }],	
   "service": [{
-  	  "type": "CelStorageService",
-  	  "serviceEndpoint": [
-  	     "https://storage.googleapis.com/did-cel-log/",
-  	     "..."
-  	  ]
-     }
+    "type": "CelStorageService",
+    "serviceEndpoint": [
+      "https://storage.googleapis.com/did-cel-log/",
+      "..."
+	]
   }]
 }
 ```
+
+A complex example using referenced `verificationMethod`:
+
+```json
+{
+  "heartbeatFrequency": "P3M",
+  "verificationMethod": [{
+    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+   }],  
+  "assertionMethod": [
+    "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+  ],
+  "authentication": [
+    "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
+    {
+	
+    }
+  ],
+	
+  "service": [{
+    "type": "CelStorageService",
+    "serviceEndpoint": [
+      "https://storage.googleapis.com/did-cel-log/",
+      "..."
+	]
+  }]
+}
+```
+
+
 
 #### Response
 
@@ -54,9 +78,11 @@ content-type: application/json
 
 {
   "keys": {
-    "#key_id": "KMS_KEY_RESOURCE_PATH"
+    "#keyId": "KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
   },
-  "log": Initial Event Log
+  "log": {
+    Initial Event Log
+  }
 }
 ```
 
