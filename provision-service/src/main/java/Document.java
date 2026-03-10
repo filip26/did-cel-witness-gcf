@@ -102,7 +102,7 @@ class Document {
                 for (var value : values) {
                     if (value instanceof String keyRef && keyRef.startsWith("kms:")) {
 
-                        if ("assertionMethod".equals(entry.getKey())) {
+                        if (assertionKmsKeyId == null && "assertionMethod".equals(entry.getKey())) {
                             assertionKmsKeyId = keyRef;
                         }
                         final var refIndex = index;
@@ -112,7 +112,7 @@ class Document {
                             && keyMap.get("id") instanceof String keyRef
                             && keyRef.startsWith("kms:")) {
 
-                        if ("assertionMethod".equals(entry.getKey())) {
+                        if (assertionKmsKeyId == null && "assertionMethod".equals(entry.getKey())) {
                             assertionKmsKeyId = keyRef;
                         }
 
@@ -187,10 +187,6 @@ class Document {
             if (keyEntry == null) {
                 throw new IllegalArgumentException(
                         "An unknown relative verification method reference [" + kmsKeyRef.getKey() + "]");
-            }
-
-            if (kmsKeyRef.getKey() == assertionKmsKeyId) {
-                assertionKey = keyEntry;
             }
 
             kmsKeyRef.getValue().accept(keyEntry.getKey());
