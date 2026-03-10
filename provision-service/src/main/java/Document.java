@@ -25,7 +25,6 @@ class Document {
     private final List<Map<String, String>> kmsKeys;
     private final List<Entry<String, Consumer<String>>> kmsKeyRefs;
 
-    private Map<String, String> keyMap;
     private Map.Entry<String, PublicKey> assertionKey;
 
     private Document(
@@ -37,7 +36,7 @@ class Document {
         this.assertionKmsKeyId = assertionKmsKeyId;
         this.kmsKeys = kmsKeys;
         this.kmsKeyRefs = kmsKeyRefs;
-        this.keyMap = null;
+
         this.assertionKey = null;
     }
 
@@ -138,7 +137,8 @@ class Document {
             KeyManagementServiceClient kms,
             KeyRingName kmsKeyRing) throws InterruptedException, ExecutionException {
 
-        final var futureMap = new LinkedHashMap<String, ApiFuture<Map.Entry<String, PublicKey>>>(kmsKeys.size());
+        final var futureMap = new LinkedHashMap<String, ApiFuture<Entry<String, Entry<String, PublicKey>>>>(
+                kmsKeys.size());
 
         for (var kmsKey : kmsKeys) {
             var kmsKeyId = kmsKey.get("id");
@@ -153,56 +153,47 @@ class Document {
                     kms
                             .getPublicKeyCallable()
                             .futureCall(GetPublicKeyRequest.newBuilder().setName(resourceName).build()),
-                    publicKey -> Map.entry(EventLog.publicKeyMultibase(publicKey), publicKey),
+                    publicKey -> Map.entry(
+                            kmsKeyId,
+                            Map.entry(
+                                    EventLog.publicKeyMultibase(publicKey),
+                                    publicKey)),
                     MoreExecutors.directExecutor()));
         }
 
         // Combine all individual string futures into one list future
-        keyMap = ApiFutures.allAsList(futureMap.values()).get().stream()
+        var keyMap = ApiFutures.allAsList(futureMap.values()).get().stream()
                 .collect(Collectors.toMap(
-                        e -> "#" + e.getKey(),
-                        e -> "kms:" + e.getValue()
-                                .getName()
-                                .substring(
-                                        kmsKeyRing.toString().length()
-                                                + "/cryptoKeys/".length())));
+                        Entry::getKey,
+                        Entry::getValue));
 
-        try {
+        for (var kmsKey : kmsKeys) {
 
-            for (var kmsKey : kmsKeys) {
+            var kmsKeyId = kmsKey.get("id");
 
-                var kmsKeyId = kmsKey.get("id");
+            var keyEntry = keyMap.get(kmsKeyId);
 
-                var keyEntry = futureMap.get(kmsKeyId).get();
-
-                if (kmsKeyId == assertionKmsKeyId) {
-                    assertionKey = keyEntry;
-                }
-
-                Document.overrideWithMultikey(kmsKey, keyEntry.getKey());
+            if (kmsKeyId == assertionKmsKeyId) {
+                assertionKey = keyEntry;
             }
 
-            for (var kmsKeyRef : kmsKeyRefs) {
+            Document.overrideWithMultikey(kmsKey, keyEntry.getKey());
+        }
 
-                var future = futureMap.get(kmsKeyRef.getKey());
+        for (var kmsKeyRef : kmsKeyRefs) {
 
-                if (future == null) {
-                    throw new IllegalArgumentException(
-                            "An unknown relative verification method reference [" + kmsKeyRef.getKey() + "]");
-                }
+            var keyEntry = keyMap.get(kmsKeyRef.getKey());
 
-                var keyEntry = future.get();
-
-                if (kmsKeyRef.getKey() == assertionKmsKeyId) {
-                    assertionKey = keyEntry;
-                }
-
-                kmsKeyRef.getValue().accept("#" + keyEntry.getKey());
+            if (keyEntry == null) {
+                throw new IllegalArgumentException(
+                        "An unknown relative verification method reference [" + kmsKeyRef.getKey() + "]");
             }
 
-        } catch (InterruptedException | ExecutionException e) {
-            // This should technically not happen since the parent future succeeded
-            throw new RuntimeException("Failed to retrieve pre-resolved future", e);
+            if (kmsKeyRef.getKey() == assertionKmsKeyId) {
+                assertionKey = keyEntry;
+            }
+
+            kmsKeyRef.getValue().accept("#" + keyEntry.getKey());
         }
 
         if (assertionKey == null) {
@@ -270,9 +261,5 @@ class Document {
 
     public String publicKeyMultibase() {
         return assertionKey.getKey();
-    }
-
-    public Map<String, String> getKeyMap() {
-        return keyMap;
     }
 }

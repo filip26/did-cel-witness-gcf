@@ -78,12 +78,9 @@ HTTP/2 200 OK
 content-type: application/json
 
 {
-  "keys": {
-    "#keyId": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
-  },
-  "log": {
+  "log": [{
     Initial Event Log
-  }
+  }]
 }
 ```
 

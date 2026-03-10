@@ -124,8 +124,6 @@ public class ProvisionService implements HttpFunction {
 
             // assembly initial log
             final var log = Map.of(
-                    "keys",
-                    document.getKeyMap(),
                     "log",
                     List.of(Map.of("event", event)));
 
