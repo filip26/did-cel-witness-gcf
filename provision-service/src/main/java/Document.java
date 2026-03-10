@@ -156,7 +156,7 @@ class Document {
                     publicKey -> Map.entry(
                             kmsKeyId,
                             Map.entry(
-                                    EventLog.publicKeyMultibase(publicKey),
+                                    "#" + EventLog.publicKeyMultibase(publicKey),
                                     publicKey)),
                     MoreExecutors.directExecutor()));
         }
@@ -193,7 +193,7 @@ class Document {
                 assertionKey = keyEntry;
             }
 
-            kmsKeyRef.getValue().accept("#" + keyEntry.getKey());
+            kmsKeyRef.getValue().accept(keyEntry.getKey());
         }
 
         if (assertionKey == null) {
@@ -249,8 +249,7 @@ class Document {
     }
 
     private static void overrideWithMultikey(Map<String, String> map, String publicKeyMultibase) {
-        map.clear();
-        map.put("id", "#" + publicKeyMultibase);
+        map.put("id", publicKeyMultibase);
         map.put("type", "Multikey");
         map.put("publicKeyMultibase", publicKeyMultibase);
     }
