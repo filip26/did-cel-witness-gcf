@@ -24,24 +24,49 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. I
   ISO-8601 duration specifying how often heartbeat events should be generated.  
   Default: `P3M`.
 
+The minimum request example:
+
+```json
+{
+  "assertionMethod": [{
+    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+  }],	
+  "service": [{
+    "type": "CelStorageService",
+    "serviceEndpoint": [
+      "https://storage.googleapis.com/did-cel-log/",
+      "..."
+	]
+  }]
+}
+```
+
+A request example using the referenced `verificationMethod` and provisioning additional keys:
+
 ```json
 {
   "heartbeatFrequency": "P3M",
-  "assertionMethod": [{ 
-  	"kmsKey": "...",
-  	"kmsKeyVersion": "..."
-  }],
-  "authenticationMethod": [{
+  "verificationMethod": [{
+    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+   }],  
+  "assertionMethod": [
+    "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+  ],
+  "authentication": [
+    "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
+    {
 
+    }
+  ],
+  "recovery": [{
+    "id": "kms:KMS_KEY_2_ID/cryptoKeyVersions/KMS_KEY_2_VERSION"
   }],
-
   "service": [{
-  	  "type": "CelStorageService",
-  	  "serviceEndpoint": [
-  	     "https://storage.googleapis.com/did-cel-log/",
-  	     "..."
-  	  ]
-     }
+    "type": "CelStorageService",
+    "serviceEndpoint": [
+      "https://storage.googleapis.com/did-cel-log/",
+      "..."
+	]
   }]
 }
 ```
@@ -54,9 +79,11 @@ content-type: application/json
 
 {
   "keys": {
-    "#key_id": "KMS_KEY_RESOURCE_PATH"
+    "#keyId": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
   },
-  "log": Initial Event Log
+  "log": {
+    Initial Event Log
+  }
 }
 ```
 
@@ -99,4 +126,16 @@ gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
   --role="roles/cloudkms.signer"
 ```
 
+### Deployment
+ 
+```bash
+ gcloud functions deploy FUNCTION-NAME \
+  --gen2 \
+  --runtime=java25 \
+  --source=. \
+  --entry-point=ProvisionService \
+  --trigger-http \
+  --service-account=SA-NAME@PROJECT_ID.iam.gserviceaccount.com
+  --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING"
+```
 
