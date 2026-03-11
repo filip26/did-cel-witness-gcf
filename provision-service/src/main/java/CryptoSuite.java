@@ -38,7 +38,7 @@ class CryptoSuite {
     private final Signer signer;
 
     private final KeyManagementServiceClient kms;
-    private final String resource;
+    private final String kmsKeyResource;
 
     private final String digestName;
 
@@ -47,13 +47,13 @@ class CryptoSuite {
             int keyLength,
             Signer signer,
             KeyManagementServiceClient kms,
-            String resource,
+            String kmsKeyResource,
             String digestName) {
         this.suiteName = name;
         this.keyLength = keyLength;
         this.signer = signer;
         this.kms = kms;
-        this.resource = resource;
+        this.kmsKeyResource = kmsKeyResource;
         this.digestName = digestName;
     }
 
@@ -107,7 +107,7 @@ class CryptoSuite {
 
             var hash = hash(digestName, canonicalDocument, canonicalProof);
 
-            var signature = signer.sign(kms, resource, hash);
+            var signature = signer.sign(kms, kmsKeyResource, hash);
 
             return Templates.jsonProof(
                     suiteName,

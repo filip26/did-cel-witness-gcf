@@ -58,7 +58,11 @@ class Templates {
      * @param signature   cryptographic proof value
      * @return JSON proof
      */
-    public static Map<String, String> jsonProof(String cryptosuite, String created, String method, String nonce,
+    public static Map<String, String> jsonProof(
+            String cryptosuite, 
+            String created, 
+            String method, 
+            String nonce,
             String signature) {
         return Map.of(
                 "type", "DataIntegrityProof",

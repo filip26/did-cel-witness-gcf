@@ -1,7 +1,6 @@
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -123,11 +122,7 @@ public class ProvisionService implements HttpFunction {
             event.put("proof", proof);
 
             // assembly initial log
-            final var log = Map.of(
-                    "keys",
-                    document.getKeyMap(),
-                    "log",
-                    List.of(Map.of("event", event)));
+            final var log = EventLog.newLog(event);
 
             response.setStatusCode(200, "OK");
             response.setContentType("application/json");
