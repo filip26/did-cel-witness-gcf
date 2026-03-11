@@ -109,6 +109,7 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 Post-Quantum:
 
 | Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
+|-------------|------------------|--------|----------|
 | `mldsa44-jcs-2024` | `PQ_SIGN_ML_DSA_44` | `JCS` | 1312 bytes |
 | `mldsa44-rdfc-2024` | `PQ_SIGN_ML_DSA_44` | `RDFC` | 1312 bytes |
 | `slhdsa128-jcs-2024` | `PQ_SIGN_SLH_DSA_SHA2_128S` | `JCS` | 32 bytes |
