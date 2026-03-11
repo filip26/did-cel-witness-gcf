@@ -13,6 +13,7 @@ import com.google.cloud.kms.v1.GetPublicKeyRequest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
 import com.google.cloud.kms.v1.PublicKey;
+import com.google.cloud.kms.v1.PublicKey.PublicKeyFormat;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import jakarta.json.stream.JsonParser;
@@ -134,8 +135,9 @@ class Document {
     }
 
     public final void bindKeys(
-            KeyManagementServiceClient kms,
-            KeyRingName kmsKeyRing) throws InterruptedException, ExecutionException {
+            final KeyManagementServiceClient kms,
+            final KeyRingName kmsKeyRing,
+            final boolean isPostQuantum) throws InterruptedException, ExecutionException {
 
         // <kms:id, <kms:id, <<Multikey.id, Multikey.multibase>, publicKey>
         final var futureMap = new LinkedHashMap<String, ApiFuture<Entry<String, Entry<Entry<String, String>, PublicKey>>>>(
@@ -155,12 +157,15 @@ class Document {
                             .getPublicKeyCallable()
                             .futureCall(GetPublicKeyRequest.newBuilder()
                                     .setName(resourceName)
-//PQ: must be enabled                                    .setPublicKeyFormat(PublicKeyFormat.NIST_PQC)
+                                    .setPublicKeyFormat(
+                                            isPostQuantum
+                                                    ? PublicKeyFormat.NIST_PQC
+                                                    : PublicKeyFormat.PUBLIC_KEY_FORMAT_UNSPECIFIED)
                                     .build()),
                     publicKey -> Map.entry(
                             kmsKeyId,
                             Map.entry(
-                                    PublicKeyExporter.publicKeyMultibase(publicKey),
+                                    PublicKeyExporter.publicMultikey(publicKey),
                                     publicKey)),
                     MoreExecutors.directExecutor()));
         }

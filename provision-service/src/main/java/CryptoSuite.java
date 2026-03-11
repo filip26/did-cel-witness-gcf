@@ -96,11 +96,10 @@ class CryptoSuite {
                 "SHA-256",
                 Multibase.BASE_58_BTC::encode);
 
-        // Added SLH-DSA Support
+        // PQ experiments
         case PQ_SIGN_SLH_DSA_SHA2_128S -> new CryptoSuite(
                 "slhdsa-jcs-2024", // TODO made up name, testing only
-                64, // Signature sizes are larger for PQ, but keyLength here often refers to
-                    // security level/hash
+                64,
                 CryptoSuite::dsaSign,
                 kms,
                 publicKey.getName(),

@@ -20,7 +20,7 @@ class PublicKeyExporter {
 
     // returns public key encoded as a pair of Multikey.id and
     // Multikey.publicKeyMultibase
-    public static Entry<String, String> publicKeyMultibase(com.google.cloud.kms.v1.PublicKey publicKey) {
+    public static Entry<String, String> publicMultikey(com.google.cloud.kms.v1.PublicKey publicKey) {
 
         return switch (publicKey.getAlgorithm()) {
         case EC_SIGN_P256_SHA256 -> {

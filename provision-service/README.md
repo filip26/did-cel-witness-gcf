@@ -94,6 +94,7 @@ The service is configured via the following environment variables:
 |----------|----------|------------|
 | `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
 | `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
+| `PQ` | No | Enables Post-Quantum algorithms (Experimental ⚛️) |
 
 ### IAM Permissions
 
