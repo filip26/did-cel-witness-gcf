@@ -18,7 +18,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, $O(1)$. No JSON-
 - Serverless function - scalable, low-overhead execution.
 - Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
 
-## Test Endpoints
+## 🛸 Public Endpoints
 
 Endpoints are organized by algorithm, region, and status.
 
@@ -32,7 +32,7 @@ Endpoints are organized by algorithm, region, and status.
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
 
-#### ⚛️ `mldsa44-jcs-2024`, `1312B`, `us-east4`
+#### `mldsa44-jcs-2024`, `1312B`, `us-east4`, ⚛️
 - `https://witness-purple-5qnvfghl2q-uk.a.run.app`
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
