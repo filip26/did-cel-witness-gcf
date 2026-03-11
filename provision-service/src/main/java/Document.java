@@ -13,6 +13,7 @@ import com.google.cloud.kms.v1.GetPublicKeyRequest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
 import com.google.cloud.kms.v1.PublicKey;
+import com.google.cloud.kms.v1.PublicKey.PublicKeyFormat;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import jakarta.json.stream.JsonParser;
@@ -25,7 +26,7 @@ class Document {
     private final List<Map<String, String>> kmsKeys;
     private final List<Entry<String, Consumer<String>>> kmsKeyRefs;
 
-    private Map.Entry<String, PublicKey> assertionKey;
+    private Entry<Entry<String, String>, PublicKey> assertionKey;
 
     private Document(
             Map<String, Object> document,
@@ -134,10 +135,12 @@ class Document {
     }
 
     public final void bindKeys(
-            KeyManagementServiceClient kms,
-            KeyRingName kmsKeyRing) throws InterruptedException, ExecutionException {
+            final KeyManagementServiceClient kms,
+            final KeyRingName kmsKeyRing,
+            final boolean isPostQuantum) throws InterruptedException, ExecutionException {
 
-        final var futureMap = new LinkedHashMap<String, ApiFuture<Entry<String, Entry<String, PublicKey>>>>(
+        // <kms:id, <kms:id, <<Multikey.id, Multikey.multibase>, publicKey>
+        final var futureMap = new LinkedHashMap<String, ApiFuture<Entry<String, Entry<Entry<String, String>, PublicKey>>>>(
                 kmsKeys.size());
 
         for (var kmsKey : kmsKeys) {
@@ -152,11 +155,17 @@ class Document {
             futureMap.put(kmsKeyId, ApiFutures.transform(
                     kms
                             .getPublicKeyCallable()
-                            .futureCall(GetPublicKeyRequest.newBuilder().setName(resourceName).build()),
+                            .futureCall(GetPublicKeyRequest.newBuilder()
+                                    .setName(resourceName)
+                                    .setPublicKeyFormat(
+                                            isPostQuantum
+                                                    ? PublicKeyFormat.NIST_PQC
+                                                    : PublicKeyFormat.PUBLIC_KEY_FORMAT_UNSPECIFIED)
+                                    .build()),
                     publicKey -> Map.entry(
                             kmsKeyId,
                             Map.entry(
-                                    "#" + PublicKeyExporter.publicKeyMultibase(publicKey),
+                                    PublicKeyExporter.publicMultikey(publicKey),
                                     publicKey)),
                     MoreExecutors.directExecutor()));
         }
@@ -177,7 +186,10 @@ class Document {
                 assertionKey = keyEntry;
             }
 
-            Document.overrideWithMultikey(kmsKey, keyEntry.getKey());
+            Document.overrideWithMultikey(
+                    kmsKey,
+                    keyEntry.getKey().getKey(),
+                    keyEntry.getKey().getValue());
         }
 
         for (var kmsKeyRef : kmsKeyRefs) {
@@ -189,7 +201,7 @@ class Document {
                         "An unknown relative verification method reference [" + kmsKeyRef.getKey() + "]");
             }
 
-            kmsKeyRef.getValue().accept(keyEntry.getKey());
+            kmsKeyRef.getValue().accept(keyEntry.getKey().getKey());
         }
 
         if (assertionKey == null) {
@@ -244,8 +256,11 @@ class Document {
         };
     }
 
-    private static void overrideWithMultikey(Map<String, String> map, String publicKeyMultibase) {
-        map.put("id", publicKeyMultibase);
+    private static void overrideWithMultikey(
+            Map<String, String> map,
+            String id,
+            String publicKeyMultibase) {
+        map.put("id", id);
         map.put("type", "Multikey");
         map.put("publicKeyMultibase", publicKeyMultibase);
     }
@@ -254,7 +269,7 @@ class Document {
         return assertionKey.getValue();
     }
 
-    public String publicKeyMultibase() {
-        return assertionKey.getKey();
+    public String publicKeyFragmentId() {
+        return assertionKey.getKey().getKey();
     }
 }

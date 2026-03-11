@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.apicatalog.jcs.Jcs;
 import com.apicatalog.multibase.Multibase;
@@ -41,6 +42,7 @@ class CryptoSuite {
     private final String kmsKeyResource;
 
     private final String digestName;
+    private final Function<byte[], String> signatureMultibase;
 
     public CryptoSuite(
             String name,
@@ -48,13 +50,15 @@ class CryptoSuite {
             Signer signer,
             KeyManagementServiceClient kms,
             String kmsKeyResource,
-            String digestName) {
+            String digestName,
+            Function<byte[], String> signatureMultibase) {
         this.suiteName = name;
         this.keyLength = keyLength;
         this.signer = signer;
         this.kms = kms;
         this.kmsKeyResource = kmsKeyResource;
         this.digestName = digestName;
+        this.signatureMultibase = signatureMultibase;
     }
 
     /**
@@ -71,7 +75,8 @@ class CryptoSuite {
                 CryptoSuite::ec256Sign,
                 kms,
                 publicKey.getName(),
-                "SHA-256");
+                "SHA-256",
+                Multibase.BASE_58_BTC::encode);
 
         case EC_SIGN_P384_SHA384 -> new CryptoSuite(
                 "ecdsa-jcs-2019",
@@ -79,7 +84,8 @@ class CryptoSuite {
                 CryptoSuite::ec384Sign,
                 kms,
                 publicKey.getName(),
-                "SHA-384");
+                "SHA-384",
+                Multibase.BASE_58_BTC::encode);
 
         case EC_SIGN_ED25519 -> new CryptoSuite(
                 "eddsa-jcs-2022",
@@ -87,7 +93,27 @@ class CryptoSuite {
                 CryptoSuite::ed256Sign,
                 kms,
                 publicKey.getName(),
-                "SHA-256");
+                "SHA-256",
+                Multibase.BASE_58_BTC::encode);
+
+        // PQ experiments
+        case PQ_SIGN_SLH_DSA_SHA2_128S -> new CryptoSuite(
+                "slhdsa-jcs-2024", // TODO made up name, testing only
+                64,
+                CryptoSuite::dsaSign,
+                kms,
+                publicKey.getName(),
+                "SHA-256",
+                Multibase.BASE_64_URL::encode);
+
+        case PQ_SIGN_ML_DSA_87 -> new CryptoSuite(
+                "mldsa87-jcs-2024", // TODO made up name, testing only
+                64, // Corresponds to the 512-bit (64-byte) digest output
+                CryptoSuite::dsaSign,
+                kms,
+                publicKey.getName(),
+                "SHA-512", // Level 5 security usually pairs with SHA-512
+                Multibase.BASE_64_URL::encode);
 
         default ->
             throw new IllegalStateException("Unsupported KMS Key Algorithm [" + publicKey.getAlgorithm() + "]");
@@ -114,7 +140,7 @@ class CryptoSuite {
                     created,
                     method,
                     nonce,
-                    Multibase.BASE_58_BTC.encode(signature));
+                    signatureMultibase.apply(signature));
 
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
@@ -210,5 +236,11 @@ class CryptoSuite {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static byte[] dsaSign(KeyManagementServiceClient kms, String resource, byte[] blob) {
+        final var builder = AsymmetricSignRequest.newBuilder().setName(resource);
+        builder.setData(ByteString.copyFrom(blob));
+        return kms.asymmetricSign(builder.build()).getSignature().toByteArray();
     }
 }

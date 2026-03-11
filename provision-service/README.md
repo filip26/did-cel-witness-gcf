@@ -1,6 +1,6 @@
 # Icon `did:cel` Provision Service
 
-Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. Initializes the corresponding `did:cel` event log, optionally storing it in GCS.
+Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. Constructs a `did:cel` identifier and initializes the corresponding `did:cel` event log.
 
 ## Service
 
@@ -94,6 +94,7 @@ The service is configured via the following environment variables:
 |----------|----------|------------|
 | `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
 | `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
+| `PQ` | No | Enables Post-Quantum algorithms (Experimental ⚛️) |
 
 ### IAM Permissions
 

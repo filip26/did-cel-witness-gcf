@@ -35,6 +35,9 @@ public class ProvisionService implements HttpFunction {
     // Static configuration detected at startup
     private static final KeyRingName KEY_RING;
 
+    // Environment variables
+    private static final boolean IS_POST_QUANTUM;
+
     static {
         var kmsLocation = System.getenv("KMS_LOCATION");
         var kmsKeyRingName = System.getenv("KMS_KEY_RING");
@@ -42,6 +45,8 @@ public class ProvisionService implements HttpFunction {
         if (kmsLocation == null || kmsKeyRingName == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
+
+        IS_POST_QUANTUM = Boolean.valueOf(System.getenv().getOrDefault("PQ", "false"));
 
         var project = ServiceOptions.getDefaultProjectId();
 
@@ -91,8 +96,7 @@ public class ProvisionService implements HttpFunction {
         }
 
         try {
-
-            document.bindKeys(KMS_CLIENT, KEY_RING);
+            document.bindKeys(KMS_CLIENT, KEY_RING, IS_POST_QUANTUM);
 
             // create new did:cel:method-specific-id
             final var methodSpecificId = EventLog.methodSpecificId(document.root());
@@ -111,7 +115,7 @@ public class ProvisionService implements HttpFunction {
             event.put("operation", operation);
 
             // proof verification method
-            final var verificationMethod = did + "#" + document.publicKeyMultibase();
+            final var verificationMethod = did + document.publicKeyFragmentId();
 
             final var suite = CryptoSuite.newSuite(document.publicKey(), KMS_CLIENT);
 
