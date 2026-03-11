@@ -13,7 +13,7 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, $O(1)$. No JSON-
 - Oblivious witnessing - operates only on hashes; the witness cannot see the event content.  
 - Signed & timestamped attestations - cryptographically verifiable proofs.  
 - ⚡ Static $O(1)$ c14n - supports RDFC or JCS
-- ⚛️ Post-Quantum algorithms support
+- ⚛️ Post-Quantum algorithms
 - Cloud KMS integration - secure key management for signing.  
 - Serverless function - scalable, low-overhead execution.
 - Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.

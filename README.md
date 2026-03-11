@@ -11,7 +11,7 @@ Performs oblivious witnessing of event log. Issues signed and timestamped attest
 
 ⚡ $O(1)$ c14n, supports RDFC or JCS ⚡
 
-⚛️ Post-Quantum algorithms support
+⚛️ Post-Quantum algorithms
 
 🛸 Public Endpoints: 
   - `ecdsa-jcs-2019`, `us-central1`, `HSM`
