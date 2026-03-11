@@ -173,7 +173,7 @@ class Document {
 
             var keyEntry = keyMap.get(kmsKeyId);
 
-            if (kmsKeyId == assertionKmsKeyId) {
+            if (assertionKmsKeyId.equals(kmsKeyId)) {
                 assertionKey = keyEntry;
             }
 
@@ -193,7 +193,7 @@ class Document {
         }
 
         if (assertionKey == null) {
-            throw new IllegalArgumentException("Missing assertionMethod KMS key.");
+            throw new IllegalStateException("Unmatched assertionMethod KMS key.");
         }
     }
 
