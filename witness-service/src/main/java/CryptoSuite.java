@@ -42,6 +42,7 @@ public final class CryptoSuite {
     private final ProofCanonizer proofC14n;
 
     private final String digestName;
+    private final Function<byte[], String> signatureEncoder;
 
     public CryptoSuite(
             String name,
@@ -49,13 +50,15 @@ public final class CryptoSuite {
             Function<byte[], byte[]> signer,
             Function<String, byte[]> documentC14n,
             ProofCanonizer proofC14n,
-            String digestName) {
+            String digestName,
+            Function<byte[], String> signatureEncoder) {
         this.suiteName = name;
         this.keyLength = keyLength;
         this.signer = signer;
         this.documentC14n = documentC14n;
         this.proofC14n = proofC14n;
         this.digestName = digestName;
+        this.signatureEncoder = signatureEncoder;
     }
 
     /**
@@ -99,7 +102,8 @@ public final class CryptoSuite {
                 asymmetricSigner,
                 documentCanonizer,
                 proofCanonizer,
-                "SHA-256");
+                "SHA-256",
+                Multibase.BASE_58_BTC::encode);
 
         case EC_SIGN_P384_SHA384 -> new CryptoSuite(
                 "ecdsa-" + c14n.toLowerCase() + "-2019",
@@ -107,7 +111,8 @@ public final class CryptoSuite {
                 asymmetricSigner,
                 documentCanonizer,
                 proofCanonizer,
-                "SHA-384");
+                "SHA-384",
+                Multibase.BASE_58_BTC::encode);
 
         case EC_SIGN_ED25519 -> new CryptoSuite(
                 "eddsa-" + c14n.toLowerCase() + "-2022",
@@ -115,7 +120,26 @@ public final class CryptoSuite {
                 asymmetricSigner,
                 documentCanonizer,
                 proofCanonizer,
-                "SHA-256");
+                "SHA-256",
+                Multibase.BASE_58_BTC::encode);
+
+        case PQ_SIGN_SLH_DSA_SHA2_128S -> new CryptoSuite(
+                "slhdsa128-" + c14n.toLowerCase() + "-2024",
+                32,
+                asymmetricSigner,
+                documentCanonizer,
+                proofCanonizer,
+                "SHA-256",
+                Multibase.BASE_64_URL::encode);
+
+        case PQ_SIGN_ML_DSA_44 -> new CryptoSuite(
+                "mldsa44-" + c14n.toLowerCase() + "-2024",
+                1312,
+                asymmetricSigner,
+                documentCanonizer,
+                proofCanonizer,
+                "SHA-256",
+                Multibase.BASE_64_URL::encode);
 
         default ->
             throw new IllegalStateException("Unsupported KMS Key Algorithm [" + algorithm + "]");
@@ -154,7 +178,7 @@ public final class CryptoSuite {
                     created,
                     method,
                     nonce,
-                    Multibase.BASE_58_BTC.encode(signature));
+                    signatureEncoder.apply(signature));
 
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

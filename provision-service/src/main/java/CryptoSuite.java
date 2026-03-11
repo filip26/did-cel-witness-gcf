@@ -42,7 +42,7 @@ class CryptoSuite {
     private final String kmsKeyResource;
 
     private final String digestName;
-    private final Function<byte[], String> signatureMultibase;
+    private final Function<byte[], String> signatureEncoder;
 
     public CryptoSuite(
             String name,
@@ -51,14 +51,14 @@ class CryptoSuite {
             KeyManagementServiceClient kms,
             String kmsKeyResource,
             String digestName,
-            Function<byte[], String> signatureMultibase) {
+            Function<byte[], String> signatureEncoder) {
         this.suiteName = name;
         this.keyLength = keyLength;
         this.signer = signer;
         this.kms = kms;
         this.kmsKeyResource = kmsKeyResource;
         this.digestName = digestName;
-        this.signatureMultibase = signatureMultibase;
+        this.signatureEncoder = signatureEncoder;
     }
 
     /**
@@ -98,8 +98,17 @@ class CryptoSuite {
 
         // PQ experiments
         case PQ_SIGN_SLH_DSA_SHA2_128S -> new CryptoSuite(
-                "slhdsa-jcs-2024", // TODO made up name, testing only
-                64,
+                "slhdsa128-jcs-2024",
+                32,
+                CryptoSuite::dsaSign,
+                kms,
+                publicKey.getName(),
+                "SHA-256",
+                Multibase.BASE_64_URL::encode);
+
+        case PQ_SIGN_ML_DSA_44 -> new CryptoSuite(
+                "mldsa44-jcs-2024",
+                1312,
                 CryptoSuite::dsaSign,
                 kms,
                 publicKey.getName(),
@@ -107,8 +116,8 @@ class CryptoSuite {
                 Multibase.BASE_64_URL::encode);
 
         case PQ_SIGN_ML_DSA_87 -> new CryptoSuite(
-                "mldsa87-jcs-2024", // TODO made up name, testing only
-                64, // Corresponds to the 512-bit (64-byte) digest output
+                "mldsa87-jcs-2024",
+                2592,
                 CryptoSuite::dsaSign,
                 kms,
                 publicKey.getName(),
@@ -140,7 +149,7 @@ class CryptoSuite {
                     created,
                     method,
                     nonce,
-                    signatureMultibase.apply(signature));
+                    signatureEncoder.apply(signature));
 
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

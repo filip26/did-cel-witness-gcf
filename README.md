@@ -7,13 +7,20 @@ This repository provides services, agents, and libraries for creating, managing,
 
 ## 🛡️ Oblivious Witness Service
 
-[Oblivious Witness Service](./witness-service/README.md)
-
 Performs oblivious witnessing of event log. Issues signed and timestamped attestations over event log hashes using Google Cloud KMS in a serverless environment. Processes only cryptographic hashes and never accesses event log contents, preserving privacy while producing verifiable W3C VC Data Integrity witness proofs. 
 
 ⚡ $O(1)$ c14n, supports RDFC or JCS ⚡
 
+⚛️ Post-Quantum algorithms support
+
+🛸 Public Endpoints: 
+  - `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
+  - `eddsa-rdfc-2022`, `256bit`, `europe-west3`
+  - `mldsa44-jcs-2024`, `1312B`, `us-east4`, ⚛️
+
 Can be used independently of the `did:cel` ecosystem.
+
+👉 See [Iron Witness Service](./witness-service/README.md)
 
 ## 🔐 Managed `did:cel` Identifiers
 
@@ -57,6 +64,7 @@ Contributions of all kinds are welcome - whether it’s code, documentation, tes
 
 - [The `did:cel` Method Specification](https://w3c-ccg.github.io/did-cel-spec/)
 - [W3C Verifiable Credential Data Integrity](https://www.w3.org/TR/vc-data-integrity)
+- [Quantum-Safe Cryptosuites](https://w3c-ccg.github.io/di-quantum-safe/)
 
 ## 💼 Commercial Support
 
