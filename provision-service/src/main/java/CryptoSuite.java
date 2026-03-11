@@ -42,7 +42,7 @@ class CryptoSuite {
     private final String kmsKeyResource;
 
     private final String digestName;
-    private final Function<byte[], String> signatureMultibase;
+    private final Function<byte[], String> signatureEncoder;
 
     public CryptoSuite(
             String name,
@@ -51,14 +51,14 @@ class CryptoSuite {
             KeyManagementServiceClient kms,
             String kmsKeyResource,
             String digestName,
-            Function<byte[], String> signatureMultibase) {
+            Function<byte[], String> signatureEncoder) {
         this.suiteName = name;
         this.keyLength = keyLength;
         this.signer = signer;
         this.kms = kms;
         this.kmsKeyResource = kmsKeyResource;
         this.digestName = digestName;
-        this.signatureMultibase = signatureMultibase;
+        this.signatureEncoder = signatureEncoder;
     }
 
     /**
@@ -149,7 +149,7 @@ class CryptoSuite {
                     created,
                     method,
                     nonce,
-                    signatureMultibase.apply(signature));
+                    signatureEncoder.apply(signature));
 
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

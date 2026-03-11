@@ -33,7 +33,7 @@ Endpoints are organized by algorithm, region, and status.
 - Status: Active
 
 #### ⚛️ `mldsa44-jcs-2024`, `1312B`, `us-east4`
-- `https://witness-blue-5qnvfghl2q-ey.a.run.app`
+- `https://witness-purple-5qnvfghl2q-uk.a.run.app`
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
 
