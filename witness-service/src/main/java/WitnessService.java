@@ -97,6 +97,8 @@ public class WitnessService implements HttpFunction {
                     case EC_SIGN_P256_SHA256 -> WitnessService::ec256Sign;
                     case EC_SIGN_P384_SHA384 -> WitnessService::ec384Sign;
                     case EC_SIGN_ED25519 -> WitnessService::ed256Sign;
+                    case PQ_SIGN_ML_DSA_44 -> WitnessService::dsaSign;
+                    case PQ_SIGN_SLH_DSA_SHA2_128S -> WitnessService::dsaSign;
                     default ->
                         throw new IllegalStateException("Unsupported KMS Key Algorithm [" + keyAlgorithm + "]");
                     });
@@ -211,5 +213,11 @@ public class WitnessService implements HttpFunction {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static byte[] dsaSign(byte[] blob) {
+        final var builder = AsymmetricSignRequest.newBuilder().setName(RESOURCE_NAME);
+        builder.setData(ByteString.copyFrom(blob));
+        return KMS_CLIENT.asymmetricSign(builder.build()).getSignature().toByteArray();
     }
 }

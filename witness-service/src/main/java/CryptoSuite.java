@@ -117,6 +117,22 @@ public final class CryptoSuite {
                 proofCanonizer,
                 "SHA-256");
 
+        case PQ_SIGN_SLH_DSA_SHA2_128S -> new CryptoSuite(
+                "slhdsa128-" + c14n.toLowerCase() + "-2024",
+                32,
+                asymmetricSigner,
+                documentCanonizer,
+                proofCanonizer,
+                "SHA-256");
+        
+        case PQ_SIGN_ML_DSA_44 -> new CryptoSuite(
+                "mldsa44-" + c14n.toLowerCase() + "-2024",
+                1312,
+                asymmetricSigner,
+                documentCanonizer,
+                proofCanonizer,
+                "SHA-256");        
+
         default ->
             throw new IllegalStateException("Unsupported KMS Key Algorithm [" + algorithm + "]");
         };

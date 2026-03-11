@@ -13,6 +13,8 @@ Performs oblivious witnessing of event log. Issues signed and timestamped attest
 
 ⚡ $O(1)$ c14n, supports RDFC or JCS ⚡
 
+⚛️ Post-Quantum algorithms support
+
 Can be used independently of the `did:cel` ecosystem.
 
 ## 🔐 Managed `did:cel` Identifiers
@@ -57,6 +59,7 @@ Contributions of all kinds are welcome - whether it’s code, documentation, tes
 
 - [The `did:cel` Method Specification](https://w3c-ccg.github.io/did-cel-spec/)
 - [W3C Verifiable Credential Data Integrity](https://www.w3.org/TR/vc-data-integrity)
+- [Quantum-Safe Cryptosuites](https://w3c-ccg.github.io/di-quantum-safe/)
 
 ## 💼 Commercial Support
 

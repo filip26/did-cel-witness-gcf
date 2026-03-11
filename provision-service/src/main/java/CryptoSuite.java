@@ -98,8 +98,8 @@ class CryptoSuite {
 
         // PQ experiments
         case PQ_SIGN_SLH_DSA_SHA2_128S -> new CryptoSuite(
-                "slhdsa-jcs-2024", // TODO made up name, testing only
-                64,
+                "slhdsa128-jcs-2024",
+                32,
                 CryptoSuite::dsaSign,
                 kms,
                 publicKey.getName(),
@@ -107,8 +107,8 @@ class CryptoSuite {
                 Multibase.BASE_64_URL::encode);
 
         case PQ_SIGN_ML_DSA_87 -> new CryptoSuite(
-                "mldsa87-jcs-2024", // TODO made up name, testing only
-                64, // Corresponds to the 512-bit (64-byte) digest output
+                "mldsa87-jcs-2024",
+                2592,
                 CryptoSuite::dsaSign,
                 kms,
                 publicKey.getName(),

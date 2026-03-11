@@ -6,13 +6,14 @@ A did:cel witness service performing oblivious witnessing, issuing signed and ti
 
 Witnesses provide cryptographic proofs that an event existed at a specific time without accessing the event itself. This ensures privacy, auditability, and integrity in `did:cel` event logs.
 
-The canonicalization methods used (`JCS` or `RDFC`) are static, O(1). No JSON-LD, JCS, RDFC processing; the canonicalization is strictly performed on pre-computed canonical data structures.
+The canonicalization methods used (`JCS` or `RDFC`) are static, $O(1)$. No JSON-LD, JCS, RDFC processing; the canonicalization is strictly performed on pre-computed canonical data structures.
 
 ### ✨ Features
 
 - Oblivious witnessing - operates only on hashes; the witness cannot see the event content.  
 - Signed & timestamped attestations - cryptographically verifiable proofs.  
 - ⚡ Static $O(1)$ c14n - supports RDFC or JCS
+- ⚛️ Post-Quantum algorithms support
 - Cloud KMS integration - secure key management for signing.  
 - Serverless function - scalable, low-overhead execution.
 - Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
@@ -95,7 +96,7 @@ The service is configured via the following environment variables:
 
 The cryptosuite must match both the selected canonicalization method (`C14N`) and the KMS key algorithm.
 
-| Cryptosuite | KMS Key Algorithm | `C14N` | Key Size |
+| Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
 |-------------|------------------|--------|----------|
 | `ecdsa-jcs-2019` | `EC_SIGN_P256_SHA256` | `JCS` | 256 bits |
 | `ecdsa-jcs-2019` | `EC_SIGN_P384_SHA384` | `JCS` | 384 bits |
@@ -103,6 +104,15 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 | `ecdsa-rdfc-2019` | `EC_SIGN_P256_SHA256` | `RDFC` | 256 bits |
 | `ecdsa-rdfc-2019` | `EC_SIGN_P384_SHA384` | `RDFC` | 384 bits |
 | `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
+
+
+Post-Quantum:
+
+| Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
+| `mldsa44-jcs-2024` | `PQ_SIGN_ML_DSA_44` | `JCS` | 1312 bytes |
+| `mldsa44-rdfc-2024` | `PQ_SIGN_ML_DSA_44` | `RDFC` | 1312 bytes |
+| `slhdsa128-jcs-2024` | `PQ_SIGN_SLH_DSA_SHA2_128S` | `JCS` | 32 bytes |
+| `slhdsa128-rdfc-2024` | `PQ_SIGN_SLH_DSA_SHA2_128S` | `RDFC` | 32 bytes |
 
 #### Notes
 

@@ -59,9 +59,9 @@ class Templates {
      * @return JSON proof
      */
     public static Map<String, String> jsonProof(
-            String cryptosuite, 
-            String created, 
-            String method, 
+            String cryptosuite,
+            String created,
+            String method,
             String nonce,
             String signature) {
         return Map.of(
