@@ -20,7 +20,7 @@ Can be used independently of the `did:cel` ecosystem.
 A modular suite for managing the lifecycle of secure `did:cel` identifiers using Google Cloud KMS. Components can be used independently or as a unified stack.
 
 - [Provision Service](./provision-service/README.md) 
-  Provisions a `did:cel` identifier by binding an existing KMS key, and initializes the corresponding event log.
+  Provisions a `did:cel` identifier by binding existing KMS keys, and initializes the corresponding event log.
 
 - **Activation Agent**
   Orchestrates the setup of a fully operational `did:cel` identifier by coordinating provisioning, persistence, witnessing, and heartbeat scheduling. Ensures the identifier is live, persisted, and witnessed.

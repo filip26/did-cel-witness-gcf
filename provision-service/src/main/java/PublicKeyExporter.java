@@ -1,5 +1,6 @@
 
 import java.security.KeyFactory;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
@@ -7,6 +8,8 @@ import java.security.interfaces.EdECPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.apicatalog.multibase.Multibase;
 import com.apicatalog.multicodec.codec.KeyCodec;
@@ -15,22 +18,49 @@ import com.google.cloud.kms.v1.KeyManagementServiceClient;
 
 class PublicKeyExporter {
 
-    // returns public key encoded as multibase/multicodec
-    public static String publicKeyMultibase(com.google.cloud.kms.v1.PublicKey publicKey) {
+    // returns public key encoded as a pair of Multikey.id and
+    // Multikey.publicKeyMultibase
+    public static Entry<String, String> publicKeyMultibase(com.google.cloud.kms.v1.PublicKey publicKey) {
 
-        return Multibase.BASE_58_BTC.encode(switch (publicKey.getAlgorithm()) {
-        case EC_SIGN_P256_SHA256 -> KeyCodec.P256_PUBLIC_KEY.encode(
-                PublicKeyExporter.exportRawECKey(publicKey));
+        return switch (publicKey.getAlgorithm()) {
+        case EC_SIGN_P256_SHA256 -> {
+            var publicKeyMultibase = Multibase.BASE_58_BTC.encode(
+                    KeyCodec.P256_PUBLIC_KEY.encode(
+                            PublicKeyExporter.exportRawECKey(publicKey)));
+            yield Map.entry("#" + publicKeyMultibase, publicKeyMultibase);
+        }
 
-        case EC_SIGN_P384_SHA384 -> KeyCodec.P384_PUBLIC_KEY.encode(
-                PublicKeyExporter.exportRawECKey(publicKey));
+        case EC_SIGN_P384_SHA384 -> {
+            var publicKeyMultibase = Multibase.BASE_58_BTC.encode(
+                    KeyCodec.P384_PUBLIC_KEY.encode(
+                            PublicKeyExporter.exportRawECKey(publicKey)));
+            yield Map.entry("#" + publicKeyMultibase, publicKeyMultibase);
+        }
 
-        case EC_SIGN_ED25519 -> KeyCodec.ED25519_PUBLIC_KEY.encode(
-                PublicKeyExporter.exportRawEDKey(publicKey));
+        case EC_SIGN_ED25519 -> {
+            var publicKeyMultibase = Multibase.BASE_58_BTC.encode(
+                    KeyCodec.ED25519_PUBLIC_KEY.encode(
+                            PublicKeyExporter.exportRawEDKey(publicKey)));
+            yield Map.entry("#" + publicKeyMultibase, publicKeyMultibase);
+        }
+
+        // PQC Cases: These return raw bytes directly from the KMS response
+        case PQ_SIGN_SLH_DSA_SHA2_128S -> {
+            var publicKeyMultibase = Multibase.BASE_64_URL.encode(
+                    KeyCodec.SLHDSA_SHA2_128S_PUBLIC_KEY.encode(
+                            publicKey.getPublicKey().getData().toByteArray()));
+            yield Map.entry("#" + fingerprint(publicKey.getPublicKey().getData().toByteArray()), publicKeyMultibase);
+        }
+        case PQ_SIGN_ML_DSA_87 -> {
+            var publicKeyMultibase = Multibase.BASE_64_URL.encode(
+                    KeyCodec.MLDSA_87_PUBLIC_KEY.encode(
+                            publicKey.getPublicKey().getData().toByteArray()));
+            yield Map.entry("#" + fingerprint(publicKey.getPublicKey().getData().toByteArray()), publicKeyMultibase);
+        }
 
         default ->
             throw new IllegalArgumentException("Unsupported key type [" + publicKey + "]");
-        });
+        };
     }
 
     public static byte[] exportRawEDKey(com.google.cloud.kms.v1.PublicKey publicKey) {
@@ -103,7 +133,7 @@ class PublicKeyExporter {
         }
     }
 
-    static byte[] extractEd25519Bytes(EdECPublicKey key) {
+    private static byte[] extractEd25519Bytes(EdECPublicKey key) {
         // Ed25519 public keys in Java are represented by an EdECPoint.
         // The "Y" coordinate already contains the 255-bit y-value
         // and the MSB parity bit for x, following RFC 8032.
@@ -120,7 +150,7 @@ class PublicKeyExporter {
         return fixed;
     }
 
-    static byte[] compressNistKey(ECPublicKey pubKey) {
+    private static byte[] compressNistKey(ECPublicKey pubKey) {
         int fieldSize = (pubKey.getParams().getCurve().getField().getFieldSize() + 7) / 8;
         byte[] x = normalize(pubKey.getW().getAffineX().toByteArray(), fieldSize);
         byte prefix = pubKey.getW().getAffineY().testBit(0) ? (byte) 0x03 : (byte) 0x02;
@@ -131,7 +161,7 @@ class PublicKeyExporter {
         return compressed;
     }
 
-    static byte[] normalize(byte[] data, int length) {
+    private static byte[] normalize(byte[] data, int length) {
         byte[] fixed = new byte[length];
         int srcPos = Math.max(0, data.length - length);
         int destPos = Math.max(0, length - data.length);
@@ -147,10 +177,29 @@ class PublicKeyExporter {
         }
     }
 
-    static byte[] decodePem(String pem) {
+    private static byte[] decodePem(String pem) {
         String clean = pem.replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .replaceAll("\\s", "");
         return Base64.getDecoder().decode(clean);
+    }
+
+    private static String fingerprint(byte[] publicKey) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            return Multibase.BASE_58_BTC.encode(digest.digest(publicKey));
+
+//            // PQ keys (ML-DSA, SLH-DSA) provide raw bytes in 'public_key'
+//            // Standard keys (EC) provide a PEM string in 'pem'
+//            if (!publicKey.getPublicKey().getData().isEmpty()) {
+//                return digest.digest(publicKey.getPublicKey().getData().toByteArray());
+//            } else if (publicKey.getPem() != null && !publicKey.getPem().isEmpty()) {
+//                return digest.digest(publicKey.getPem().getBytes(StandardCharsets.UTF_8));
+//            }
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not found", e);
+        }
     }
 }

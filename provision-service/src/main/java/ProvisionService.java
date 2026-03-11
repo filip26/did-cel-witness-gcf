@@ -111,7 +111,7 @@ public class ProvisionService implements HttpFunction {
             event.put("operation", operation);
 
             // proof verification method
-            final var verificationMethod = did + "#" + document.publicKeyMultibase();
+            final var verificationMethod = did + document.publicKeyFragmentId();
 
             final var suite = CryptoSuite.newSuite(document.publicKey(), KMS_CLIENT);
 
