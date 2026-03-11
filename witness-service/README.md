@@ -32,6 +32,11 @@ Endpoints are organized by algorithm, region, and status.
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
 
+#### ⚛️ `mldsa44-jcs-2024`, `1312B`, `us-east4`
+- `https://witness-blue-5qnvfghl2q-ey.a.run.app`
+- Verification Method: `did:key` (used for simplicity)
+- Status: Active
+
 **Note:** The test endpoints are hosted on GCloud’s free tier and automatically shuts down during periods of inactivity. Consequently, the first request after inactivity may experience a brief delay while the service starts.
 
 ## Service

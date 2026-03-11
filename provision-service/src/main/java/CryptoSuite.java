@@ -106,6 +106,15 @@ class CryptoSuite {
                 "SHA-256",
                 Multibase.BASE_64_URL::encode);
 
+        case PQ_SIGN_ML_DSA_44 -> new CryptoSuite(
+                "mldsa44-jcs-2024",
+                1312,
+                CryptoSuite::dsaSign,
+                kms,
+                publicKey.getName(),
+                "SHA-256",
+                Multibase.BASE_64_URL::encode);
+
         case PQ_SIGN_ML_DSA_87 -> new CryptoSuite(
                 "mldsa87-jcs-2024",
                 2592,

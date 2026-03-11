@@ -51,6 +51,12 @@ class PublicKeyExporter {
                             publicKey.getPublicKey().getData().toByteArray()));
             yield Map.entry("#" + fingerprint(publicKey.getPublicKey().getData().toByteArray()), publicKeyMultibase);
         }
+        case PQ_SIGN_ML_DSA_44 -> {
+            var publicKeyMultibase = Multibase.BASE_64_URL.encode(
+                    KeyCodec.MLDSA_44_PUBLIC_KEY.encode(
+                            publicKey.getPublicKey().getData().toByteArray()));
+            yield Map.entry("#" + fingerprint(publicKey.getPublicKey().getData().toByteArray()), publicKeyMultibase);
+        }
         case PQ_SIGN_ML_DSA_87 -> {
             var publicKeyMultibase = Multibase.BASE_64_URL.encode(
                     KeyCodec.MLDSA_87_PUBLIC_KEY.encode(
