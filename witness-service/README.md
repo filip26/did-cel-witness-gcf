@@ -76,7 +76,7 @@ curl -X POST ENDPOINT \
 }
 ```
 
-## Deploy
+## 🛫 Deploy
 
 ### Prerequisites
 
