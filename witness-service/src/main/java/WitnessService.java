@@ -88,8 +88,11 @@ public class WitnessService implements HttpFunction {
                 }
             }));
 
-            final var keyAlgorithm = KMS_CLIENT.getCryptoKeyVersion(RESOURCE_NAME).getAlgorithm();
-
+            // Get key algorithm from a public key, cloudkms.publicKeyViewer is least permissive
+            final var publicKey = KMS_CLIENT.getPublicKey(RESOURCE_NAME);
+            
+            final var keyAlgorithm = publicKey.getAlgorithm();
+            
             CRYPTOSUITE = CryptoSuite.newSuite(
                     keyAlgorithm,
                     c14n,

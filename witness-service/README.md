@@ -1,6 +1,6 @@
-# Iron `did:cel` Witness Service
+# Iron Witness Service
 
-A did:cel witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. The service never sees the event content, preserving privacy while providing verifiable proofs.
+A `did:cel` witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. The service never sees the event content, preserving privacy while providing verifiable proofs.
 
 ## Overview
 
@@ -82,7 +82,7 @@ curl -X POST ENDPOINT \
 
 * Configured GCP project
 * [Google Cloud SDK / gcloud CLI](https://cloud.google.com/sdk/docs/install)
-* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) - Asymmetric Signing (EC or EdDSA).
+* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) - Asymmetric Signing
 
 ### Configuration
 
@@ -111,7 +111,7 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 | `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
 
 
-Post-Quantum:
+⚛️ Post-Quantum:
 
 | Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
 |-------------|------------------|--------|----------|
@@ -138,7 +138,7 @@ gcloud iam service-accounts create SA-NAME \
 Grant these roles to the service account:
 
 * `roles/cloudkms.signer` (To sign)
-* `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
+* `roles/cloudkms.publicKeyViewer` (To detect key size/algorithm during cold-start)
 
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
@@ -153,7 +153,7 @@ gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --location=$KMS_LOCATION \
   --keyring=$KMS_KEY_RING \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/cloudkms.viewer"
+  --role="roles/cloudkms.publicKeyViewer"
 ```
     
 ### Deployment
