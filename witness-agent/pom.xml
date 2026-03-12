@@ -54,7 +54,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<argLine>-Dfile.encoding=UTF-8</argLine>
 
-		<titanium-jcs.version>3.0.0-M2</titanium-jcs.version>
+		<titanium-jcs.version>3.0.0-M3</titanium-jcs.version>
 		<tree-io.version>0.14.0</tree-io.version>
 		<jakarta.json.version>2.0.1</jakarta.json.version>
 
