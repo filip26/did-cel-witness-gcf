@@ -138,7 +138,7 @@ gcloud iam service-accounts create SA-NAME \
 Grant these roles to the service account:
 
 * `roles/cloudkms.signer` (To sign)
-* `roles/cloudkms.publicKeyViewer` (To detect key size/algorithm during cold-start)
+* `roles/cloudkms.publicKeyViewer` (To detect key algorithm during cold-start)
 
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
