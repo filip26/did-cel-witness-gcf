@@ -1,6 +1,6 @@
 # Icon `did:cel` Provision Service
 
-Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. Constructs a `did:cel` identifier and initializes the corresponding `did:cel` event log.
+Provisions a `did:cel` identifier by binding existing Google Cloud KMS keys. Constructs a `did:cel` identifier and initializes the corresponding `did:cel` event log.
 
 ## Service
 
@@ -16,6 +16,13 @@ Provisions a `did:cel` identifier by binding an existing Google Cloud KMS key. C
 | `ecdsa-jcs-2019`   | `EC_SIGN_P256_SHA256` | 256 bits |
 | `ecdsa-jcs-2019`   | `EC_SIGN_P384_SHA384` | 384 bits |
 | `eddsa-jcs-2022`   | `EC_SIGN_ED25519`     | 256 bits |
+
+⚛️ Post-Quantum:
+
+| Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
+|-------------|------------------|--------|----------|
+| `mldsa44-jcs-2024` | `PQ_SIGN_ML_DSA_44` | `JCS` | 1312 bytes |
+| `slhdsa128-jcs-2024` | `PQ_SIGN_SLH_DSA_SHA2_128S` | `JCS` | 32 bytes |
 
 - `service` (required)  
   Defines service endpoints associated with the identifier.
@@ -94,7 +101,7 @@ The service is configured via the following environment variables:
 |----------|----------|------------|
 | `KMS_LOCATION` | Yes | Google Cloud region where the KMS key is located (e.g., `us-central1`) |
 | `KMS_KEY_RING` | Yes | Name of the Cloud KMS KeyRing |
-| `PQ` | No | Enables Post-Quantum algorithms (Experimental ⚛️) |
+| `PQ` | No |  ⚛️ Enables Post-Quantum algorithms (default `false`) |
 
 ### IAM Permissions
 
@@ -136,4 +143,3 @@ gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
   --service-account=SA-NAME@PROJECT_ID.iam.gserviceaccount.com
   --set-env-vars="KMS_LOCATION=$KMS_LOCATION,KMS_KEY_RING=$KMS_KEY_RING"
 ```
-
