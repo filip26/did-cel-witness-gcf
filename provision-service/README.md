@@ -11,7 +11,7 @@ Provisions a `did:cel` identifier by binding existing Google Cloud KMS keys. Con
 
   The key must use one of the following supported algorithms:
 
-| Cryptosuite        | KMS Algorithm        | Key Size |
+| Cryptosuite        | KMS Key Algorithm        | Public Key Size |
 |--------------------|----------------------|----------|
 | `ecdsa-jcs-2019`   | `EC_SIGN_P256_SHA256` | 256 bits |
 | `ecdsa-jcs-2019`   | `EC_SIGN_P384_SHA384` | 384 bits |
@@ -19,10 +19,10 @@ Provisions a `did:cel` identifier by binding existing Google Cloud KMS keys. Con
 
 ⚛️ Post-Quantum:
 
-| Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
-|-------------|------------------|--------|----------|
-| `mldsa44-jcs-2024` | `PQ_SIGN_ML_DSA_44` | `JCS` | 1312 bytes |
-| `slhdsa128-jcs-2024` | `PQ_SIGN_SLH_DSA_SHA2_128S` | `JCS` | 32 bytes |
+| Cryptosuite | KMS Key Algorithm | Public Key Size |
+|-------------|------------------|----------|
+| `mldsa44-jcs-2024` | `PQ_SIGN_ML_DSA_44`  | 1312 bytes |
+| `slhdsa128-jcs-2024` | `PQ_SIGN_SLH_DSA_SHA2_128S`  | 32 bytes |
 
 - `service` (required)  
   Defines service endpoints associated with the identifier.
