@@ -25,11 +25,11 @@ ENV_VARS=$(jq -r --arg ID $FUNCTION_ID '
 export $(jq -r --arg ID $FUNCTION_ID '
   .[] | select(.id == $ID) | 
   with_entries(select(.key|(contains("env") | not))) | to_entries |
-  map("\((.key|ascii_upcase) + "=" + (.value|tostring))" ) | 
+  map("FNC_\((.key|ascii_upcase) + "=" + (.value|tostring))" ) | 
   join(" ") 
 ' $CONFIG_FILE);
 
-if [ "$TYPE" == "null" ] || [ "$REGION" == "null" ] || [ -z "$ENV_VARS" ]; then
+if [ -z "$FNC_TYPE" ] || [ -z "$FNC_REGION" ] || [ -z "$FNC_SERVICEACCOUNT" ] || [ -z "$ENV_VARS" ]; then
  echo "Error: Configuration for $FUNCTION_ID not found."
  exit 1
 fi
@@ -67,9 +67,9 @@ getFncArgs() {
 echo functions deploy $FUNCTION_ID \
   --gen2 \
   --runtime=java25 \
-  --region=$REGION \
-  --entry-point=$TYPE \
-  --service-account=$SERVICEACCOUNT \
-  $(getFncArgs $TYPE) \
-  $OPTIONS \
+  --region=$FNC_REGION \
+  --entry-point=$FNC_TYPE \
+  --service-account=$FNC_SERVICEACCOUNT \
+  $(getFncArgs $FNC_TYPE) \
+  $FNC_OPTIONS \
   --set-env-vars="$ENV_VARS,JAVA_TOOL_OPTIONS=$JVM_OPTS"
