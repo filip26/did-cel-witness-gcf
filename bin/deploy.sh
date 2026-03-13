@@ -34,13 +34,6 @@ if [ -z "$FNC_TYPE" ] || [ -z "$FNC_REGION" ] || [ -z "$FNC_SERVICEACCOUNT" ] ||
  exit 1
 fi
 
-# JVM_OPTS Optimization Reasoning:
-# -XX:+UseSerialGC: Minimizes CPU overhead and memory footprint in 1-vCPU environments.
-# -Xss256k: Reduces thread stack size from default (usually 1MB) to save RAM.
-# -XX:MaxRAMPercentage=80.0: Ensures JVM leaves 20% overhead for the OS/container to prevent OOM kills.
-# -XX:TieredStopAtLevel=1: Disables C2 compiler to speed up startup/cold starts by using only C1.
-JVM_OPTS="-XX:+UseSerialGC -Xss256k -XX:MaxRAMPercentage=80.0 -XX:TieredStopAtLevel=1"
-
 getFncArgs() {
   local id="$1"
 
@@ -64,12 +57,25 @@ getFncArgs() {
   return 1
 }
 
-echo functions deploy $FUNCTION_ID \
-  --gen2 \
-  --runtime=java25 \
-  --region=$FNC_REGION \
-  --entry-point=$FNC_TYPE \
-  --service-account=$FNC_SERVICEACCOUNT \
-  $(getFncArgs $FNC_TYPE) \
-  $FNC_OPTIONS \
-  --set-env-vars="$ENV_VARS,JAVA_TOOL_OPTIONS=$JVM_OPTS"
+# JVM_OPTS Optimization Reasoning:
+# -XX:+UseSerialGC: Minimizes CPU overhead and memory footprint in 1-vCPU environments.
+# -Xss256k: Reduces thread stack size from default (usually 1MB) to save RAM.
+# -XX:MaxRAMPercentage=80.0: Ensures JVM leaves 20% overhead for the OS/container to prevent OOM kills.
+# -XX:TieredStopAtLevel=1: Disables C2 compiler to speed up startup/cold starts by using only C1.
+JVM_OPTS="-XX:+UseSerialGC -Xss256k -XX:MaxRAMPercentage=80.0 -XX:TieredStopAtLevel=1"
+
+ENV="${ENV_VARS},JAVA_TOOL_OPTIONS=${JVM_OPTS}"
+
+GC_ARGS=(functions deploy $FUNCTION_ID  
+  --gen2 
+  --runtime=java25 
+  --region=$FNC_REGION 
+  --entry-point=$FNC_TYPE 
+  --service-account=$FNC_SERVICEACCOUNT 
+  $(getFncArgs $FNC_TYPE) 
+  $FNC_OPTIONS 
+  --set-env-vars="$ENV"
+)
+
+echo gcloud "${GC_ARGS[@]}"
+gcloud "${GC_ARGS[@]}"
