@@ -4,6 +4,7 @@
     "type": "WitnessService",
     "region": "us-central1",
     "serviceAccount": "",
+    "options": "--allow-unauthenticated",
     "env": {
       "KMS_LOCATION": "",
       "KMS_KEY_RING": "",

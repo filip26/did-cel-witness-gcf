@@ -34,8 +34,6 @@ if [ "$TYPE" == "null" ] || [ "$REGION" == "null" ] || [ -z "$ENV_VARS" ]; then
  exit 1
 fi
 
-FNC_ARGS=$(jq -r --arg ID $FUNCTION_ID '.[] | select(.id == $ID) | .options // ""' $CONFIG_FILE)
-
 # JVM_OPTS Optimization Reasoning:
 # -XX:+UseSerialGC: Minimizes CPU overhead and memory footprint in 1-vCPU environments.
 # -Xss256k: Reduces thread stack size from default (usually 1MB) to save RAM.
@@ -73,5 +71,5 @@ echo functions deploy $FUNCTION_ID \
   --entry-point=$TYPE \
   --service-account=$SERVICEACCOUNT \
   $(getFncArgs $TYPE) \
-  $FNC_ARGS \
+  $OPTIONS \
   --set-env-vars="$ENV_VARS,JAVA_TOOL_OPTIONS=$JVM_OPTS"
