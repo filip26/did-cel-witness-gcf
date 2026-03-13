@@ -64,8 +64,6 @@ getFncArgs() {
 # -XX:TieredStopAtLevel=1: Disables C2 compiler to speed up startup/cold starts by using only C1.
 JVM_OPTS="-XX:+UseSerialGC -Xss256k -XX:MaxRAMPercentage=80.0 -XX:TieredStopAtLevel=1"
 
-ENV="${ENV_VARS},JAVA_TOOL_OPTIONS=${JVM_OPTS}"
-
 GC_ARGS=(functions deploy $FUNCTION_ID  
   --gen2 
   --runtime=java25 
@@ -74,7 +72,7 @@ GC_ARGS=(functions deploy $FUNCTION_ID
   --service-account=$FNC_SERVICEACCOUNT 
   $(getFncArgs $FNC_TYPE) 
   $FNC_OPTIONS 
-  --set-env-vars="$ENV"
+  --set-env-vars="${ENV_VARS},JAVA_TOOL_OPTIONS=${JVM_OPTS}"
 )
 
 echo gcloud "${GC_ARGS[@]}"
