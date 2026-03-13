@@ -4,13 +4,12 @@ FUNCTION_NAME=$1
 
 if [ -z "$FUNCTION_NAME" ]; then
   echo "Error: No function name provided."
-  echo "Usage: ./deploy.sh <function-name>"
+  echo "Usage: ./deploy-witness-service.sh <function-name>"
   exit 1
 fi
 
 CONFIG_FILE=".env.json"
 
-# Extract the specific witness object as a comma-separated list of KEY=VALUE
 # This maps JSON keys to the Uppercase environment variables required by the function
 ENV_VARS=$(jq -r --arg NAME "$FUNCTION_NAME" '
   ."witness-service"[] | select(.name == $NAME) | 
@@ -31,7 +30,6 @@ if [ "$SA" == "null" ] || [ "$REGION" == "null" ] || [ -z "$ENV_VARS" ]; then
   exit 1
 fi
 
-
 # JVM_OPTS Optimization Reasoning:
 # -XX:+UseSerialGC: Minimizes CPU overhead and memory footprint in 1-vCPU environments.
 # -Xss256k: Reduces thread stack size from default (usually 1MB) to save RAM.
@@ -47,6 +45,6 @@ gcloud functions deploy $FUNCTION_NAME \
   --trigger-http \
   --source=./witness-service/. \
   --allow-unauthenticated \
-  --service-account=witness-invoker@api-catalog.iam.gserviceaccount.com \
+  --service-account=$SA \
   --set-env-vars="$ENV_VARS,JAVA_TOOL_OPTIONS=$JVM_OPTS"
   
