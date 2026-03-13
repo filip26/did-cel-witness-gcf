@@ -110,7 +110,6 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 | `ecdsa-rdfc-2019` | `EC_SIGN_P384_SHA384` | `RDFC` | 384 bits |
 | `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
 
-
 ⚛️ Post-Quantum:
 
 | Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
@@ -137,16 +136,8 @@ gcloud iam service-accounts create SA-NAME \
 
 Grant these roles to the service account:
 
-* `roles/cloudkms.signer` (To sign)
 * `roles/cloudkms.publicKeyViewer` (To detect key algorithm during cold-start)
-
-```bash
-gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
-  --location=$KMS_LOCATION \
-  --keyring=$KMS_KEY_RING \
-  --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/cloudkms.signer"
-```
+* `roles/cloudkms.signer` (To sign)
 
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
@@ -154,6 +145,14 @@ gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --keyring=$KMS_KEY_RING \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/cloudkms.publicKeyViewer"
+```
+
+```bash
+gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
+  --location=$KMS_LOCATION \
+  --keyring=$KMS_KEY_RING \
+  --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudkms.signer"
 ```
     
 ### Deployment
