@@ -8,7 +8,7 @@ if [ -z "$FUNCTION_ID" ]; then
   exit 1
 fi
 
-CONFIG_FILE=".env.json"
+CONFIG_FILE="config.json"
 
 REGION=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .region' "$CONFIG_FILE")
 

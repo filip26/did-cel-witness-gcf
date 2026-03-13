@@ -8,19 +8,15 @@ if [ -z "$FUNCTION_ID" ]; then
   exit 1
 fi
 
-CONFIG_FILE=".env.json"
+CONFIG_FILE="config.json"
 
 # This maps JSON keys to the Uppercase environment variables required by the function
-ENV_VARS=$(jq -r --arg ID "$FUNCTION_ID" '
+ENV_VARS=$(jq -r --arg ID $FUNCTION_ID '
   .[] | select(.id == $ID) | 
-  [
-    "KMS_LOCATION=" + .kmsLocation,
-    "KMS_KEY_RING=" + .kmsKeyRing,
-    "KMS_KEY_ID=" + .kmsKeyId,
-    "C14N=" + .c14n,
-    "VERIFICATION_METHOD=" + .verificationMethod
-  ] | join(",")
-' "$CONFIG_FILE")
+  .env | to_entries | 
+  map("\(.key + "=" + (.value|tostring))" ) | 
+  join(",") 
+' $CONFIG_FILE)
 
 REGION=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .region' "$CONFIG_FILE")
 SA=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .serviceAccount' "$CONFIG_FILE")

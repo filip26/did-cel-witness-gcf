@@ -7,4 +7,4 @@
 *.log
 *.txt
 /sbin/
-/.env.json
+/config.json
