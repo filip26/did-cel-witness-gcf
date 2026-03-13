@@ -1,0 +1,52 @@
+[
+  {
+    "id": "witness-red",
+    "type": "WitnessService",
+    "region": "us-central1",
+    "serviceAccount": "witness-invoker@api-catalog.iam.gserviceaccount.com",
+    "env": {
+      "KMS_LOCATION": "global",
+      "KMS_KEY_RING": "did-cel-keyring-1",
+      "KMS_KEY_ID": "witness-red-p256-hsm",
+      "C14N": "JCS",
+      "VERIFICATION_METHOD": "did:cel:zW1aUdGpZoVs789MPqMuHhgnpyk7yzrfMUs3p7VGk7vqTmi?storage=https://storage.googleapis.com/did-cel-log/#zDnaeVGPdpamk6akcmP4dBAvHnKwnZwvxiGdzva4YMjqmwwj4"
+    }
+  },
+  {
+    "id": "witness-blue",
+    "type": "WitnessService",
+    "region": "europe-west3",
+    "serviceAccount": "witness-invoker@api-catalog.iam.gserviceaccount.com",
+    "env": {
+      "KMS_LOCATION": "global",
+      "KMS_KEY_RING": "did-cel-keyring-1",
+      "KMS_KEY_ID": "witness-blue-ed25519",
+      "C14N": "RDFC",
+      "VERIFICATION_METHOD": "did:key:z6MkmBZtPfsepyQiFoUX4dPEgKFz3fw4LM2ZxafRFseMyMg5#z6MkmBZtPfsepyQiFoUX4dPEgKFz3fw4LM2ZxafRFseMyMg5"
+    }
+  },
+  {
+    "id": "witness-purple",
+    "type": "WitnessService",
+    "region": "us-east4",
+    "serviceAccount": "witness-invoker@api-catalog.iam.gserviceaccount.com",
+    "env": {
+      "KMS_LOCATION": "global",
+      "KMS_KEY_RING": "did-cel-keyring-1",
+      "KMS_KEY_ID": "witness-purple-mldsa44",
+      "C14N": "RDFC",
+      "VERIFICATION_METHOD": "did:key:ukCTUOuCBSfZ6dOgN8cxAkuQFtR8S-XYjr1BktAd3MasqsSPSfd21Vs4UcXO_ajAR2hmynt_J89iL-kiVjewc7xZM2iKhbZ7cR76-Z_o7nky7goeS88R264tk8Kuw-AHL5Kg-7KIodUhnQfV5JVyPMLUIaQ4RM11tfTYf35X_-FwJ45uUxNPMGWLsSP9KFL2YgIosWHcT54ZOmKnUyk8ibMiJmW_Z-YC76Gx6VioLMu4rJoxdXriN0qniC5g2ikestEbwPIxEumZp9FPKPOuIuYeGCbhxKYMG8MeebbUf5_qoLkRgFvyeOy9rNVdZYbEt4wOdn7aNn9AGizVF4q7qFuhaJbWncbk8pz2_qFZxuTueEUooTWquGbbw1zHxaH7mHJGAlHkOL9F5cIZ9btK0AvsRyie3qVV5eKOeitGJa35-HMjf2Gp6st2aX7m3AmdAFPKQMPRDWZc_wM8bjyIZZfsGZCd-Ld0Az_6LRgweX1Cmar51uS23cDqPUG7msvlQUhphm0GmwJ_oJzAveaTBSh-lCczTASTA1BF4EihEtppPDcoyZYO8saJHRiW2Tn-u3571Z3L88JYNQ581VkouJJeALC_ikWpp01ahLlERIdTccdySu3lJ8Rq4KYk5PjExz5PDYu5YP_1nAsnIyrzo3WohZbckv7W-VTW3MHcyCn6w4FJT4O8F9NaJe-9DaItKre_WJ78r_Mn4AbDK9HRV5sUpKBwPykWND9j7M9diSz7M5_24w7ZrzohkoJlZXSu3c_G5f4R_1QFJ0UyTTlK0p7zDEwmBkSOHH8qZcdeevddluijC6R_LaxjzMmKOEm2WNfp526Ifge9Cwzlu2mnnjccDUeQULD70LvOCv7fBNaTk-1S8MIUcq0NqZvLV7-nYKfVfT3eMXpOSIjiC4giuBSOmDKCk6EjidBmkrpzGCt_V1SSp2PlaDIgQ2fHw1MGwcOM35nW4K8d8ncu-htCVIJrNpwy3fshztC-X9S5ADvpK-Dow4HNhNUd3NUKmA9yXZHzUHfZdNPleZCiDHeaEXOcBrR3JD53su12bVFuVXYGJKeIsDBxMIoOCV9_djTUWo3GyZbgCG0ackpuikma8Smj6h7H0bGemOUt93t9HIwg5ZDmf4q-aHqM5wXMWZBxHjGGX9J0cEqp7FeRbqnHPsovgzExp3VUJDI7EXJ64yslg661sU2TMULL0D2j2x183Zmw4Q3JuoOwZWNjyeW5VDkXl23Qos1m2RIUMhkbpRMCBFiAhf56RMfuik50pdH9eKTC8jNjisQvXfr9XJGNmCOHZOw7n8ZBCb887FdWe5A3ncOt9G1XNmQS-Ght1RewXmWtKcwjbbFZ51Q8oG6WBsJW2ohXqFn6taYYl-TLOR6nxpG1IBvt-vQN7wKpI_ebJjLrGu9FyXjYMqs9r0-0eT6HvFk0kZhqcPxqBXWHWAWc-XlswS6tHNpr4Rvl1Q7Ebvk6J1lC-auISMO8DvZEpKFqKlPwyg6fX9WzBsjEbnbmPTm2kTqtMhIhXaEGB6-XtVHXSMAJ-950VISgfl0APPzW7dO6C2dZSqmIBk5NYggyeL4HrxjpVjjIFkPWV0HJJmO4P8XCgVpxf9VKP9sM4mrux24R7zITpcSFuodIF-ntBSB87uVd318cl2EJ-5bWyyHnrxjqc_wap4QBM8JB_rVc41hJ-oztggTkPx92lnGdWcPD0VoQhcYTNKMu19T-S5bl--gutkjUab8hSSmFkyLca"
+    }
+  },
+  {
+    "id": "did-cel-provision",
+    "type": "ProvisionService",
+    "region": "europe-west3",
+    "serviceAccount": "did-cel-provisioner@api-catalog.iam.gserviceaccount.com",
+    "env": {
+      "KMS_LOCATION": "global",
+      "KMS_KEY_RING": "did-cel-keyring-1",
+      "PQ": false
+    }
+  }
+]

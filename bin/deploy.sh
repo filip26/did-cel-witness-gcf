@@ -1,14 +1,41 @@
 #!/usr/bin/env bash
 
+read -r -d '' USER_DATA <<'DATA'
+WitnessService|./witness-service/.|--trigger-http|--allow-unauthenticated
+ProvisionService|./provision-service/.|--trigger-http|--allow-unauthenticated
+DATA
+
 FUNCTION_ID=$1
+CONFIG_FILE="functions.json"
 
 if [ -z "$FUNCTION_ID" ]; then
   echo "Error: No function id provided."
-  echo "Usage: ./deploy.sh <function-id>"
+  echo "Usage: deploy.sh <function-id>"
   exit 1
 fi
 
-CONFIG_FILE="config.json"
+getFncArgs() {
+  local id="$1"
+
+  while IFS='|' read -r name source rest; do
+    [[ "$name" == "$id" ]] || continue
+
+    shift 0
+    local args=()
+
+    IFS='|' read -ra args <<< "$rest"
+
+    printf " --source=%s" "$source"
+    for a in "${args[@]}"; do
+      printf " %s" "$a"
+    done
+
+    echo
+    return 0
+  done <<< "$USER_DATA"
+
+  return 1
+}
 
 # This maps JSON keys to the Uppercase environment variables required by the function
 ENV_VARS=$(jq -r --arg ID $FUNCTION_ID '
@@ -18,12 +45,16 @@ ENV_VARS=$(jq -r --arg ID $FUNCTION_ID '
   join(",") 
 ' $CONFIG_FILE)
 
-REGION=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .region' "$CONFIG_FILE")
-SA=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .serviceAccount' "$CONFIG_FILE")
+export $(jq -r --arg ID $FUNCTION_ID '
+  .[] | select(.id == $ID) | 
+  with_entries(select(.key|(contains("env") | not))) | to_entries |
+  map("\((.key|ascii_upcase) + "=" + (.value|tostring))" ) | 
+  join(" ") 
+' $CONFIG_FILE);
 
-if [ "$SA" == "null" ] || [ "$REGION" == "null" ] || [ -z "$ENV_VARS" ]; then
-  echo "Error: Configuration for $FUNCTION_ID not found."
-  exit 1
+if [ "$TYPE" == "null" ] || [ "$REGION" == "null" ] || [ -z "$ENV_VARS" ]; then
+ echo "Error: Configuration for $FUNCTION_ID not found."
+ exit 1
 fi
 
 # JVM_OPTS Optimization Reasoning:
@@ -37,10 +68,7 @@ gcloud functions deploy $FUNCTION_ID \
   --gen2 \
   --region=$REGION \
   --runtime=java25 \
-  --entry-point=WitnessService \
-  --trigger-http \
-  --source=./witness-service/. \
-  --allow-unauthenticated \
-  --service-account=$SA \
+  --entry-point=$TYPE \
+  $(getFncArgs $TYPE) \
+  --service-account=$SERVICEACCOUNT \
   --set-env-vars="$ENV_VARS,JAVA_TOOL_OPTIONS=$JVM_OPTS"
-  

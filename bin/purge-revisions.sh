@@ -4,11 +4,11 @@ FUNCTION_ID=$1
 
 if [ -z "$FUNCTION_ID" ]; then
   echo "Error: No function id provided."
-  echo "Usage: ./purge-revisions.sh <function-id>"
+  echo "Usage: purge-revisions.sh <function-id>"
   exit 1
 fi
 
-CONFIG_FILE="config.json"
+CONFIG_FILE="functions.json"
 
 REGION=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .region' "$CONFIG_FILE")
 
@@ -26,4 +26,3 @@ REVISIONS=$(gcloud run revisions list \
 for REV in $REVISIONS; do 
   gcloud run revisions delete $REV --region=$REGION --quiet
 done
-
