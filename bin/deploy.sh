@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-FUNCTION_NAME=$1
+FUNCTION_ID=$1
 
-if [ -z "$FUNCTION_NAME" ]; then
-  echo "Error: No function name provided."
-  echo "Usage: ./deploy-witness-service.sh <function-name>"
+if [ -z "$FUNCTION_ID" ]; then
+  echo "Error: No function id provided."
+  echo "Usage: ./deploy.sh <function-id>"
   exit 1
 fi
 
 CONFIG_FILE=".env.json"
 
 # This maps JSON keys to the Uppercase environment variables required by the function
-ENV_VARS=$(jq -r --arg NAME "$FUNCTION_NAME" '
-  ."witness-service"[] | select(.name == $NAME) | 
+ENV_VARS=$(jq -r --arg ID "$FUNCTION_ID" '
+  .[] | select(.id == $ID) | 
   [
     "KMS_LOCATION=" + .kmsLocation,
     "KMS_KEY_RING=" + .kmsKeyRing,
@@ -22,11 +22,11 @@ ENV_VARS=$(jq -r --arg NAME "$FUNCTION_NAME" '
   ] | join(",")
 ' "$CONFIG_FILE")
 
-REGION=$(jq -r --arg NAME "$FUNCTION_NAME" '."witness-service"[] | select(.name == $NAME) | .region' "$CONFIG_FILE")
-SA=$(jq -r --arg NAME "$FUNCTION_NAME" '."witness-service"[] | select(.name == $NAME) | .serviceAccount' "$CONFIG_FILE")
+REGION=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .region' "$CONFIG_FILE")
+SA=$(jq -r --arg ID "$FUNCTION_ID" '.[] | select(.id == $ID) | .serviceAccount' "$CONFIG_FILE")
 
 if [ "$SA" == "null" ] || [ "$REGION" == "null" ] || [ -z "$ENV_VARS" ]; then
-  echo "Error: Configuration for $FUNCTION_NAME not found."
+  echo "Error: Configuration for $FUNCTION_ID not found."
   exit 1
 fi
 
@@ -37,7 +37,7 @@ fi
 # -XX:TieredStopAtLevel=1: Disables C2 compiler to speed up startup/cold starts by using only C1.
 JVM_OPTS="-XX:+UseSerialGC -Xss256k -XX:MaxRAMPercentage=80.0 -XX:TieredStopAtLevel=1"
 
-gcloud functions deploy $FUNCTION_NAME \
+gcloud functions deploy $FUNCTION_ID \
   --gen2 \
   --region=$REGION \
   --runtime=java25 \
