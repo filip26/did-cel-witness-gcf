@@ -36,7 +36,7 @@ The minimum request example:
 ```json
 {
   "assertionMethod": [{
-    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"    
   }],	
   "service": [{
     "type": "CelStorageService",
@@ -54,7 +54,9 @@ A request example using the referenced `verificationMethod` and provisioning add
 {
   "heartbeatFrequency": "P3M",
   "verificationMethod": [{
-    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"
+    "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
+    "type": "KmsKey",
+    "cryptosuite": "..."    
    }],  
   "assertionMethod": [
     "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION"

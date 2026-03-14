@@ -7,17 +7,12 @@ The `did:cel` heartbeat event generator is implemented as a Google Cloud Functio
 ```json
 [{
   "id": "did:cel:zW1...",
-  "key": {
-     "id": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
-     "type": "KmsKey",
-     "cryptosuite": "..."
-  },
+  "key": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
   "witnessEndpoint":[
     "https://witness-red-5qnvfghl2q-uc.a.run.app", 
     "https://witness-blue-5qnvfghl2q-ey.a.run.app"
-  ] 
-  },
-  {
+  ]}, {
+ 
 }]
 ```
 
@@ -34,11 +29,27 @@ gcloud iam service-accounts create SA-NAME \
 Grant these roles to the service account:
 
 * `roles/storage.objectUser` (To read and update `did:cel` event log on GCS)
+* `roles/cloudkms.publicKeyViewer` (To detect key algorithm)
+* `roles/cloudkms.signer` (To sign)
 
 ```bash
 gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
     --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/storage.objectUser"
+```
+
+```bash
+gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
+  --location=$KMS_LOCATION \
+  --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudkms.publicKeyViewer"
+```
+
+```bash
+gcloud kms keyrings add-iam-policy-binding $KMS_KEY_RING \
+  --location=$KMS_LOCATION \
+  --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudkms.signer"
 ```
 
 ---

@@ -1,23 +1,29 @@
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutures;
+import com.google.api.core.SettableApiFuture;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
+import com.google.cloud.kms.v1.GetPublicKeyRequest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
+import com.google.cloud.kms.v1.PublicKey;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import jakarta.json.Json;
 import jakarta.json.JsonException;
@@ -34,9 +40,6 @@ public class HeartbeatService implements HttpFunction {
      * once per container instance.
      */
     private static final KeyManagementServiceClient KMS_CLIENT;
-    
-    // Virtual thread executor for I/O bound tasks
-    private static final ExecutorService EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     // Static initialization
     private static final JsonParserFactory JSON_PARSER_FACTORY = Json.createParserFactory(Map.of());
@@ -45,7 +48,7 @@ public class HeartbeatService implements HttpFunction {
 
     // Static configuration detected at startup
     private static final KeyRingName KEY_RING;
-    
+
     // Environment variables
     private static final String BUCKET_NAME;
 
@@ -58,11 +61,11 @@ public class HeartbeatService implements HttpFunction {
         if (BUCKET_NAME == null || kmsLocation == null || kmsKeyRingName == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
-        
+
         var project = ServiceOptions.getDefaultProjectId();
 
         KEY_RING = KeyRingName.of(project, kmsLocation, kmsKeyRingName);
-        
+
         try {
 
             KMS_CLIENT = KeyManagementServiceClient.create();
@@ -97,7 +100,7 @@ public class HeartbeatService implements HttpFunction {
                 throw new IllegalArgumentException("Root must be a JSON array");
             }
 
-            var futures = new ArrayList<CompletableFuture<String>>();
+            var futures = new ArrayList<ApiFuture<String>>();
 
             while (parser.hasNext()) {
 
@@ -107,14 +110,16 @@ public class HeartbeatService implements HttpFunction {
                     break;
                 }
 
-                var did = parser.getString();
-                futures.add(addHeartbeatAsync(did));
+                futures.add(addHeartbeatAsync(parseRequest(parser, next)));
             }
 
             // Wait for all updates to finish and collect results
-            var results = futures.stream()
-                    .map(CompletableFuture::join)
-                    .toList();
+            ApiFuture<List<String>> combinedFuture = ApiFutures.allAsList(futures);
+
+            List<String> results = combinedFuture.get();
+//            var results = futures.stream()
+//                    .map(CompletableFuture::join)
+//                    .toList();
 
             response.setStatusCode(200);
             response.setContentType("application/json");
@@ -134,19 +139,30 @@ public class HeartbeatService implements HttpFunction {
         }
     }
 
-    private CompletableFuture<String> addHeartbeatAsync(String did) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                final var blobId = BlobId.of(BUCKET_NAME, did);
-                Blob blob = STORAGE.get(blobId);
+    private ApiFuture<String> addHeartbeatAsync(final BeatRequest request) {
 
-                try (var parser = JSON_PARSER_FACTORY.createParser(new ByteArrayInputStream(blob.getContent()))) {
+        final var resourceName = KEY_RING.toString()
+                + "/cryptoKeys/"
+                + request.key();
 
-                    if (!parser.hasNext()) {
-                        return "EMPTY";
-                    }
+        // get public key async
+        var publicKey = KMS_CLIENT
+                .getPublicKeyCallable()
+                .futureCall(GetPublicKeyRequest.newBuilder()
+                        .setName(resourceName)
+                        .build());
 
-                    var log = EventLog.parse(parser);
+        // get event log async
+        var eventLog = readEventLogAsync(request);
+
+        ApiFuture<List<Object>> combinedFuture = ApiFutures.allAsList(
+                Arrays.asList(publicKey, eventLog));
+
+        return ApiFutures.transform(
+                combinedFuture,
+                results -> {
+                    PublicKey key = (PublicKey) results.get(0);
+                    EventLog log = (EventLog) results.get(1);
 
                     var lastEventHash = log.lastEventHash();
 
@@ -154,19 +170,52 @@ public class HeartbeatService implements HttpFunction {
                             "previousEventHash", lastEventHash,
                             "operation", Map.of("type", "heartbeat"));
 
-//                    final var resourceName = kmsKeyRing.toString() + "/cryptoKeys/" + kmsKeyId.substring("kms:".length());
+                    var suite = CryptoSuite.newSuite(key.getAlgorithm(), KMS_CLIENT);
 
-                    CryptoSuite.newSuite(null, KMS_CLIENT);
-                    
-                    return unsignedEvent.toString();
+                    // sign the event
+                    var proof = suite.sign(
+                            resourceName,
+                            unsignedEvent,
+                            request.id() + "#TODO");
+
+                    var signedEvent = Map.of(
+                            "previousEventHash", lastEventHash,
+                            "operation", Map.of("type", "heartbeat"),
+                            "proof", proof);
+
+                    return signedEvent.toString();
+
+                },
+                MoreExecutors.directExecutor());
+    }
+
+    private static ApiFuture<EventLog> readEventLogAsync(BeatRequest request) {
+        final SettableApiFuture<EventLog> future = SettableApiFuture.create();
+
+        // get event log async
+        var eventLog = CompletableFuture.supplyAsync(() -> {
+
+            final var blobId = BlobId.of(BUCKET_NAME, request.id().substring("did:cel:".length()));
+            Blob blob = STORAGE.get(blobId);
+
+            try (var parser = JSON_PARSER_FACTORY.createParser(new ByteArrayInputStream(blob.getContent()))) {
+
+                if (!parser.hasNext()) {
+                    throw new IllegalArgumentException();
                 }
 
-//                STORAGE.create(BlobInfo.newBuilder(blobId).build(), updatedContent.getBytes());
-//                return "OK";
-            } catch (Exception e) {
-                return "ERROR: " + e.getMessage();
+                return EventLog.parse(parser);
             }
-        }, EXECUTOR);
+        }, MoreExecutors.directExecutor())
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        future.setException(ex);
+                    } else {
+                        future.set(result);
+                    }
+                });
+
+        return future;
     }
 
     private static void sendError(HttpResponse response, int code, String status, String message) throws IOException {
@@ -181,38 +230,67 @@ public class HeartbeatService implements HttpFunction {
         }
     }
 
-    private static Object processEvent(JsonParser parser, JsonParser.Event event) {
-        return switch (event) {
-        case START_OBJECT -> {
-            var map = new LinkedHashMap<String, Object>();
-            while (parser.hasNext()) {
-                var next = parser.next();
-                if (next == JsonParser.Event.END_OBJECT) {
-                    break;
-                }
-                // In OBJECT context, next is always KEY_NAME
-                String key = parser.getString();
-                map.put(key, processEvent(parser, parser.next()));
-            }
-            yield map;
+    private static BeatRequest parseRequest(JsonParser parser, JsonParser.Event event) {
+
+        if (event != JsonParser.Event.START_OBJECT) {
+            throw new IllegalArgumentException();
         }
+
+        String did = null;
+        String kmsKey = null;
+        Collection<String> witnesses = null;
+
+        while (parser.hasNext()) {
+            var next = parser.next();
+            if (next == JsonParser.Event.END_OBJECT) {
+                break;
+            }
+            // In OBJECT context, next is always KEY_NAME
+            String key = parser.getString();
+
+            switch (key) {
+            case "id":
+                parser.next();
+                did = parser.getString();
+                break;
+
+            case "key":
+                parser.next();
+                kmsKey = parser.getString().substring("kms:".length());
+                break;
+
+            case "witnessEndpoint":
+                witnesses = parseStringList(parser, parser.next());
+                break;
+
+            default:
+                throw new IllegalArgumentException();
+            }
+        }
+
+        return new BeatRequest(did, kmsKey, witnesses);
+    }
+
+    private static List<String> parseStringList(JsonParser parser, JsonParser.Event event) {
+        return switch (event) {
         case START_ARRAY -> {
-            var list = new ArrayList<>();
+            var list = new ArrayList<String>();
             while (parser.hasNext()) {
                 var next = parser.next();
                 if (next == JsonParser.Event.END_ARRAY) {
                     break;
                 }
-                list.add(processEvent(parser, next));
+                list.add(parser.getString());
             }
             yield list;
         }
-        case VALUE_STRING -> parser.getString();
-        case VALUE_NUMBER -> parser.getBigDecimal();
-        case VALUE_TRUE -> Boolean.TRUE;
-        case VALUE_FALSE -> Boolean.FALSE;
-        case VALUE_NULL -> null;
-        default -> null;
+        default -> throw new IllegalArgumentException();
         };
     }
+}
+
+record BeatRequest(
+        String id,
+        String key,
+        Collection<String> witnesses) {
 }
