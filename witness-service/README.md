@@ -1,6 +1,6 @@
-# Iron `did:cel` Witness Service
+# Iron Witness Service
 
-A did:cel witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. The service never sees the event content, preserving privacy while providing verifiable proofs.
+A `did:cel` witness service performing oblivious witnessing, issuing signed and timestamped attestations over cryptographic event log hashes using Cloud KMS in a serverless function environment. The service never sees the event content, preserving privacy while providing verifiable proofs.
 
 ## Overview
 
@@ -13,12 +13,12 @@ The canonicalization methods used (`JCS` or `RDFC`) are static, $O(1)$. No JSON-
 - Oblivious witnessing - operates only on hashes; the witness cannot see the event content.  
 - Signed & timestamped attestations - cryptographically verifiable proofs.  
 - ⚡ Static $O(1)$ c14n - supports RDFC or JCS
-- ⚛️ Post-Quantum algorithms support
+- ⚛️ Post-Quantum algorithms
 - Cloud KMS integration - secure key management for signing.  
 - Serverless function - scalable, low-overhead execution.
 - Self-Configuring - on cold start, the service fetches KMS metadata to automatically detect the algorithm and required key size.
 
-## Test Endpoints
+## 🛸 Public Endpoints
 
 Endpoints are organized by algorithm, region, and status.
 
@@ -32,7 +32,7 @@ Endpoints are organized by algorithm, region, and status.
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
 
-#### ⚛️ `mldsa44-jcs-2024`, `1312B`, `us-east4`
+#### `mldsa44-jcs-2024`, `1312B`, `us-east4`, ⚛️
 - `https://witness-purple-5qnvfghl2q-uk.a.run.app`
 - Verification Method: `did:key` (used for simplicity)
 - Status: Active
@@ -76,13 +76,13 @@ curl -X POST ENDPOINT \
 }
 ```
 
-## Deploy
+## 🛫 Deploy
 
 ### Prerequisites
 
 * Configured GCP project
 * [Google Cloud SDK / gcloud CLI](https://cloud.google.com/sdk/docs/install)
-* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) - Asymmetric Signing (EC or EdDSA).
+* [Google Cloud KMS Key](https://cloud.google.com/security/products/security-key-management) - Asymmetric Signing
 
 ### Configuration
 
@@ -110,8 +110,7 @@ The cryptosuite must match both the selected canonicalization method (`C14N`) an
 | `ecdsa-rdfc-2019` | `EC_SIGN_P384_SHA384` | `RDFC` | 384 bits |
 | `eddsa-rdfc-2022` | `EC_SIGN_ED25519` | `RDFC` | 256 bits |
 
-
-Post-Quantum:
+⚛️ Post-Quantum:
 
 | Cryptosuite | KMS Key Algorithm | `C14N` | Public Key Size |
 |-------------|------------------|--------|----------|
@@ -137,15 +136,15 @@ gcloud iam service-accounts create SA-NAME \
 
 Grant these roles to the service account:
 
+* `roles/cloudkms.publicKeyViewer` (To detect key algorithm during cold-start)
 * `roles/cloudkms.signer` (To sign)
-* `roles/cloudkms.viewer` (To detect key size/algorithm during cold-start)
 
 ```bash
 gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --location=$KMS_LOCATION \
   --keyring=$KMS_KEY_RING \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/cloudkms.signer"
+  --role="roles/cloudkms.publicKeyViewer"
 ```
 
 ```bash
@@ -153,7 +152,7 @@ gcloud kms keys add-iam-policy-binding $KMS_KEY_ID \
   --location=$KMS_LOCATION \
   --keyring=$KMS_KEY_RING \
   --member="serviceAccount:SA-NAME@PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/cloudkms.viewer"
+  --role="roles/cloudkms.signer"
 ```
     
 ### Deployment

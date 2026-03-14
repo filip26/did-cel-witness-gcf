@@ -11,12 +11,12 @@ Performs oblivious witnessing of event log. Issues signed and timestamped attest
 
 ⚡ $O(1)$ c14n, supports RDFC or JCS ⚡
 
-⚛️ Post-Quantum algorithms support
+⚛️ Post-Quantum algorithms
 
 🛸 Public Endpoints: 
-  - `ecdsa-jcs-2019`, `256bit`, `us-central1`, `HSM`
-  - `eddsa-rdfc-2022`, `256bit`, `europe-west3`
-  - `mldsa44-jcs-2024`, `1312B`, `us-east4`, ⚛️
+  - `ecdsa-jcs-2019`, `us-central1`, `HSM`
+  - `eddsa-rdfc-2022`, `europe-west3`
+  - `mldsa44-jcs-2024`, `us-east4`, ⚛️
 
 Can be used independently of the `did:cel` ecosystem.
 

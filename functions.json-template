@@ -1,0 +1,27 @@
+[
+  {
+    "id": "witness-xy",
+    "type": "WitnessService",
+    "region": "us-central1",
+    "serviceAccount": "",
+    "options": "--allow-unauthenticated",
+    "env": {
+      "KMS_LOCATION": "",
+      "KMS_KEY_RING": "",
+      "KMS_KEY_ID": "",
+      "C14N": "JCS|RDFC",
+      "VERIFICATION_METHOD": ""
+    }
+  },
+  {
+    "id": "provision-service",
+    "type": "ProvisionService",
+    "region": "",
+    "serviceAccount": "",
+    "env": {
+      "KMS_LOCATION": "",
+      "KMS_KEY_RING": "",
+      "PQ": false
+    }
+  }  
+]

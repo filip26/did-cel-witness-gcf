@@ -4,7 +4,7 @@
 /.classpath
 /.env.yaml
 /deps/
-/bin/
-/log-template.json
 *.log
 *.txt
+/sbin/
+/functions.json
