@@ -1,105 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.apicatalog</groupId>
-	<artifactId>iron-did-cel-heartbeat-service</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+  <groupId>com.apicatalog</groupId>
+  <artifactId>iron-did-cel-heartbeat-service</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
 
-	<name>Iron did:cel Heartbeat Service</name>
+  <name>Iron did:cel Heartbeat Service</name>
 
-	<description>
-		Generates periodic events to ensure liveness and temporal continuity of
-		the event log.
-	</description>
+  <description>
+    Generates periodic events to ensure liveness and temporal continuity of
+    the event log.
+  </description>
 
-	<url>https://github.com/filip26/iron-did-cel</url>
+  <url>https://github.com/filip26/iron-did-cel</url>
 
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
 
-	<issueManagement>
-		<system>github</system>
-		<url>https://github.com/filip26/iron-did-cel/issues</url>
-	</issueManagement>
+  <issueManagement>
+    <system>github</system>
+    <url>https://github.com/filip26/iron-did-cel/issues</url>
+  </issueManagement>
 
-	<scm>
-		<connection>scm:git:git://github.com/filip26/iron-did-cel.git</connection>
-		<developerConnection>
-			scm:git:git://github.com/filip26/iron-did-cel.git</developerConnection>
-		<url>https://github.com/filip26/iron-did-cel/tree/main</url>
-	</scm>
+  <scm>
+    <connection>scm:git:git://github.com/filip26/iron-did-cel.git</connection>
+    <developerConnection>
+      scm:git:git://github.com/filip26/iron-did-cel.git</developerConnection>
+    <url>https://github.com/filip26/iron-did-cel/tree/main</url>
+  </scm>
 
-	<developers>
-		<developer>
-			<id>filip26</id>
-			<name>Filip Kolarik</name>
-			<email>filip26@gmail.com</email>
-			<roles>
-				<role>author</role>
-			</roles>
-		</developer>
-	</developers>
+  <developers>
+    <developer>
+      <id>filip26</id>
+      <name>Filip Kolarik</name>
+      <email>filip26@gmail.com</email>
+      <roles>
+        <role>author</role>
+      </roles>
+    </developer>
+  </developers>
 
-	<inceptionYear>2026</inceptionYear>
+  <inceptionYear>2026</inceptionYear>
 
-	<properties>
-		<maven.compiler.target>25</maven.compiler.target>
-		<maven.compiler.source>25</maven.compiler.source>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+  <properties>
+    <maven.compiler.target>25</maven.compiler.target>
+    <maven.compiler.source>25</maven.compiler.source>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.google.cloud</groupId>
-				<artifactId>libraries-bom</artifactId>
-				<version>26.77.0</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <titanium-jcs.version>3.0.0-M3</titanium-jcs.version>
+  </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.google.cloud.functions</groupId>
-			<artifactId>functions-framework-api</artifactId>
-			<version>2.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        <version>26.77.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
-		<dependency>
-			<groupId>com.google.cloud</groupId>
-			<artifactId>google-cloud-pubsub</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.cloud</groupId>
-			<artifactId>google-cloud-kms</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.apicatalog</groupId>
-			<artifactId>copper-multibase</artifactId>
-			<version>4.1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.apicatalog</groupId>
-			<artifactId>copper-multicodec</artifactId>
-			<version>2.4.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.eclipse.parsson</groupId>
-			<artifactId>jakarta.json</artifactId>
-			<version>1.1.7</version>
-		</dependency>
-
-	</dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.cloud.functions</groupId>
+      <artifactId>functions-framework-api</artifactId>
+      <version>2.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-kms</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.apicatalog</groupId>
+      <artifactId>copper-multibase</artifactId>
+      <version>4.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.apicatalog</groupId>
+      <artifactId>copper-multicodec</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.parsson</groupId>
+      <artifactId>jakarta.json</artifactId>
+      <version>1.1.7</version>
+    </dependency>
+    <dependency>
+      <groupId>com.apicatalog</groupId>
+      <artifactId>titanium-jcs</artifactId>
+      <version>${titanium-jcs.version}</version>
+    </dependency>
+  </dependencies>
 </project>
