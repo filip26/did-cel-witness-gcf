@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +19,6 @@ import com.google.cloud.functions.HttpResponse;
 import com.google.cloud.kms.v1.GetPublicKeyRequest;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
-import com.google.cloud.kms.v1.PublicKey;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
@@ -114,12 +114,7 @@ public class HeartbeatService implements HttpFunction {
             }
 
             // Wait for all updates to finish and collect results
-            ApiFuture<List<String>> combinedFuture = ApiFutures.allAsList(futures);
-
-            List<String> results = combinedFuture.get();
-//            var results = futures.stream()
-//                    .map(CompletableFuture::join)
-//                    .toList();
+            List<String> results = ApiFutures.allAsList(futures).get();
 
             response.setStatusCode(200);
             response.setContentType("application/json");
@@ -146,11 +141,14 @@ public class HeartbeatService implements HttpFunction {
                 + request.key();
 
         // get public key async
-        var publicKey = KMS_CLIENT
-                .getPublicKeyCallable()
-                .futureCall(GetPublicKeyRequest.newBuilder()
-                        .setName(resourceName)
-                        .build());
+        var publicKey = ApiFutures.transform(
+                KMS_CLIENT
+                        .getPublicKeyCallable()
+                        .futureCall(GetPublicKeyRequest.newBuilder()
+                                .setName(resourceName)
+                                .build()),
+                pk -> CryptoSuite.newSuite(pk.getAlgorithm(), KMS_CLIENT),
+                MoreExecutors.directExecutor());
 
         // get event log async
         var eventLog = readEventLogAsync(request);
@@ -161,7 +159,7 @@ public class HeartbeatService implements HttpFunction {
         return ApiFutures.transform(
                 combinedFuture,
                 results -> {
-                    PublicKey key = (PublicKey) results.get(0);
+                    var suite = (CryptoSuite) results.get(0);
                     EventLog log = (EventLog) results.get(1);
 
                     var lastEventHash = log.lastEventHash();
@@ -170,21 +168,16 @@ public class HeartbeatService implements HttpFunction {
                             "previousEventHash", lastEventHash,
                             "operation", Map.of("type", "heartbeat"));
 
-                    var suite = CryptoSuite.newSuite(key.getAlgorithm(), KMS_CLIENT);
-
                     // sign the event
                     var proof = suite.sign(
                             resourceName,
                             unsignedEvent,
-                            request.id() + "#TODO");
+                            request.id() + request.verificationMethod());
 
-                    var signedEvent = Map.of(
-                            "previousEventHash", lastEventHash,
-                            "operation", Map.of("type", "heartbeat"),
-                            "proof", proof);
+                    var signedEvent = new LinkedHashMap<>(unsignedEvent);
+                    signedEvent.put("proof", proof);
 
                     return signedEvent.toString();
-
                 },
                 MoreExecutors.directExecutor());
     }
@@ -193,7 +186,7 @@ public class HeartbeatService implements HttpFunction {
         final SettableApiFuture<EventLog> future = SettableApiFuture.create();
 
         // get event log async
-        var eventLog = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture.supplyAsync(() -> {
 
             final var blobId = BlobId.of(BUCKET_NAME, request.id().substring("did:cel:".length()));
             Blob blob = STORAGE.get(blobId);
@@ -238,6 +231,7 @@ public class HeartbeatService implements HttpFunction {
 
         String did = null;
         String kmsKey = null;
+        String method = null;
         Collection<String> witnesses = null;
 
         while (parser.hasNext()) {
@@ -259,6 +253,11 @@ public class HeartbeatService implements HttpFunction {
                 kmsKey = parser.getString().substring("kms:".length());
                 break;
 
+            case "verificationMethod":
+                parser.next();
+                method = parser.getString();
+                break;
+
             case "witnessEndpoint":
                 witnesses = parseStringList(parser, parser.next());
                 break;
@@ -268,7 +267,7 @@ public class HeartbeatService implements HttpFunction {
             }
         }
 
-        return new BeatRequest(did, kmsKey, witnesses);
+        return new BeatRequest(did, kmsKey, method, witnesses);
     }
 
     private static List<String> parseStringList(JsonParser parser, JsonParser.Event event) {
@@ -292,5 +291,6 @@ public class HeartbeatService implements HttpFunction {
 record BeatRequest(
         String id,
         String key,
+        String verificationMethod,
         Collection<String> witnesses) {
 }

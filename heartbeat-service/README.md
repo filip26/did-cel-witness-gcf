@@ -8,6 +8,7 @@ The `did:cel` heartbeat event generator is implemented as a Google Cloud Functio
 [{
   "id": "did:cel:zW1...",
   "key": "kms:KMS_KEY_ID/cryptoKeyVersions/KMS_KEY_VERSION",
+  "verificationMethod": "#key-123",
   "witnessEndpoint":[
     "https://witness-red-5qnvfghl2q-uc.a.run.app", 
     "https://witness-blue-5qnvfghl2q-ey.a.run.app"
