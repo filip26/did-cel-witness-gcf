@@ -37,14 +37,19 @@ for FNC in $FUNCTIONS; do
     --format="value(metadata.name)" | tail -n +3)
 
   if [ "$NR" != "" ]; then
-    REVISIONS=${REVISIONS[@]}$'\n'${NR[@]}
+    while read -r REV; do
+      REVISIONS+="${REGION}|${REV}"$'\n'
+    done <<< "$NR"
+
     printf "%s\n" $(wc -l <<< $NR)
   else 
     printf "OK\n"    
   fi
-
 done
     
-for REV in $REVISIONS; do 
-  gcloud run revisions delete $REV --region=$REGION --quiet
-done
+while IFS="|" read -r REGION REV; do
+  if [ -z "$REGION" ]; then 
+    continue 
+  fi
+  echo "gcloud run revisions delete "$REV" --region="$REGION" --quiet"
+done <<< "$REVISIONS"
