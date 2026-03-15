@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import com.google.api.core.ApiFuture;
@@ -41,6 +43,8 @@ public class HeartbeatService implements HttpFunction {
      */
     private static final KeyManagementServiceClient KMS_CLIENT;
 
+    private static final Executor EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
+    
     // Static initialization
     private static final JsonParserFactory JSON_PARSER_FACTORY = Json.createParserFactory(Map.of());
     private static final JsonGeneratorFactory JSON_GENERATOR_FACTORY = Json.createGeneratorFactory(Map.of());
@@ -185,28 +189,19 @@ public class HeartbeatService implements HttpFunction {
     private static ApiFuture<EventLog> readEventLogAsync(BeatRequest request) {
         final SettableApiFuture<EventLog> future = SettableApiFuture.create();
 
-        // get event log async
-        CompletableFuture.supplyAsync(() -> {
-
-            final var blobId = BlobId.of(BUCKET_NAME, request.id().substring("did:cel:".length()));
-            Blob blob = STORAGE.get(blobId);
-
-            try (var parser = JSON_PARSER_FACTORY.createParser(new ByteArrayInputStream(blob.getContent()))) {
-
-                if (!parser.hasNext()) {
-                    throw new IllegalArgumentException();
+        EXECUTOR.execute(() -> {
+            try {
+                final var blobId = BlobId.of(BUCKET_NAME, request.id().substring("did:cel:".length()));
+                Blob blob = STORAGE.get(blobId); // This blocks, but Virtual Threads handle it
+                
+                try (var parser = JSON_PARSER_FACTORY.createParser(new ByteArrayInputStream(blob.getContent()))) {
+                    if (!parser.hasNext()) throw new IllegalArgumentException();
+                    future.set(EventLog.parse(parser));
                 }
-
-                return EventLog.parse(parser);
+            } catch (Exception e) {
+                future.setException(e);
             }
-        }, MoreExecutors.directExecutor())
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        future.setException(ex);
-                    } else {
-                        future.set(result);
-                    }
-                });
+        });
 
         return future;
     }

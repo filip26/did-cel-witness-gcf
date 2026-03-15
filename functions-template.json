@@ -5,6 +5,7 @@
     "region": "us-central1",
     "serviceAccount": "",
     "options": "--allow-unauthenticated",
+    "jvm": "",
     "env": {
       "KMS_LOCATION": "",
       "KMS_KEY_RING": "",
