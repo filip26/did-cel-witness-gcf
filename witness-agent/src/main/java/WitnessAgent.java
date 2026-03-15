@@ -35,10 +35,10 @@ public class WitnessAgent implements HttpFunction {
     private static final Logger LOG = Logger.getLogger(WitnessAgent.class.getName());
 
     // Explicitly using Virtual Threads to handle parallel I/O pipelines
-    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     private final HttpClient CLIENT = HttpClient.newBuilder()
-            .executor(executor)
+            .executor(EXECUTOR)
             .build();
 
     // Static initialization
@@ -156,7 +156,7 @@ public class WitnessAgent implements HttpFunction {
             final var witnessRequests = witnessEndpoints.stream()
                     .map(url -> CompletableFuture.supplyAsync(
                             () -> witnessRequest(url, digestMultibase),
-                            executor))
+                            EXECUTOR))
                     .toList();
 
             // Wait for all requests to resolve (success or failure)

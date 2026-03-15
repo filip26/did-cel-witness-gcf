@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -23,6 +22,7 @@ import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyRingName;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -44,7 +44,7 @@ public class HeartbeatService implements HttpFunction {
     private static final KeyManagementServiceClient KMS_CLIENT;
 
     private static final Executor EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
-    
+
     // Static initialization
     private static final JsonParserFactory JSON_PARSER_FACTORY = Json.createParserFactory(Map.of());
     private static final JsonGeneratorFactory JSON_GENERATOR_FACTORY = Json.createGeneratorFactory(Map.of());
@@ -114,7 +114,7 @@ public class HeartbeatService implements HttpFunction {
                     break;
                 }
 
-                futures.add(addHeartbeatAsync(parseRequest(parser, next)));
+                futures.add(addHeartbeatAsync(BeatRequest.parseRequest(parser, next)));
             }
 
             // Wait for all updates to finish and collect results
@@ -140,28 +140,14 @@ public class HeartbeatService implements HttpFunction {
 
     private ApiFuture<String> addHeartbeatAsync(final BeatRequest request) {
 
-        final var resourceName = KEY_RING.toString()
+        final var kmsKeyResource = KEY_RING.toString()
                 + "/cryptoKeys/"
                 + request.key();
-
-        // get public key async
-        var publicKey = ApiFutures.transform(
-                KMS_CLIENT
-                        .getPublicKeyCallable()
-                        .futureCall(GetPublicKeyRequest.newBuilder()
-                                .setName(resourceName)
-                                .build()),
-                pk -> CryptoSuite.newSuite(pk.getAlgorithm(), KMS_CLIENT),
-                MoreExecutors.directExecutor());
-
-        // get event log async
-        var eventLog = readEventLogAsync(request);
-
-        ApiFuture<List<Object>> combinedFuture = ApiFutures.allAsList(
-                Arrays.asList(publicKey, eventLog));
-
+        
         return ApiFutures.transform(
-                combinedFuture,
+                ApiFutures.allAsList(Arrays.asList(
+                        getCryptoSuiteAsync(kmsKeyResource),
+                        getEventLogAsync(request))),
                 results -> {
                     var suite = (CryptoSuite) results.get(0);
                     EventLog log = (EventLog) results.get(1);
@@ -174,7 +160,7 @@ public class HeartbeatService implements HttpFunction {
 
                     // sign the event
                     var proof = suite.sign(
-                            resourceName,
+                            kmsKeyResource,
                             unsignedEvent,
                             request.id() + request.verificationMethod());
 
@@ -186,16 +172,35 @@ public class HeartbeatService implements HttpFunction {
                 MoreExecutors.directExecutor());
     }
 
-    private static ApiFuture<EventLog> readEventLogAsync(BeatRequest request) {
+    private ApiFuture<CryptoSuite> getCryptoSuiteAsync(final String kmsKeyResource) {
+        return ApiFutures.transform(
+                KMS_CLIENT
+                        .getPublicKeyCallable()
+                        .futureCall(GetPublicKeyRequest.newBuilder()
+                                .setName(kmsKeyResource)
+                                .build()),
+                publicKey -> CryptoSuite.newSuite(publicKey.getAlgorithm(), KMS_CLIENT),
+                MoreExecutors.directExecutor());
+    }
+
+    private void storeLog(String id, Blob blob, byte[] log) {
+        // Minimal write: storage.create() only requires roles/storage.objectCreator
+        STORAGE.create(BlobInfo.newBuilder(BlobId.of(BUCKET_NAME, id))
+                .setContentType("application/json")
+                .build(), log, Storage.BlobTargetOption.generationMatch(blob.getGeneration()));
+    }
+
+    private static ApiFuture<EventLog> getEventLogAsync(BeatRequest request) {
         final SettableApiFuture<EventLog> future = SettableApiFuture.create();
 
         EXECUTOR.execute(() -> {
             try {
                 final var blobId = BlobId.of(BUCKET_NAME, request.id().substring("did:cel:".length()));
                 Blob blob = STORAGE.get(blobId); // This blocks, but Virtual Threads handle it
-                
+
                 try (var parser = JSON_PARSER_FACTORY.createParser(new ByteArrayInputStream(blob.getContent()))) {
-                    if (!parser.hasNext()) throw new IllegalArgumentException();
+                    if (!parser.hasNext())
+                        throw new IllegalArgumentException();
                     future.set(EventLog.parse(parser));
                 }
             } catch (Exception e) {
@@ -217,8 +222,16 @@ public class HeartbeatService implements HttpFunction {
                     .writeEnd();
         }
     }
+}
 
-    private static BeatRequest parseRequest(JsonParser parser, JsonParser.Event event) {
+record BeatRequest(
+        String id,
+        String key,
+        String verificationMethod,
+        Collection<String> witnesses) {
+    
+
+    public static BeatRequest parseRequest(JsonParser parser, JsonParser.Event event) {
 
         if (event != JsonParser.Event.START_OBJECT) {
             throw new IllegalArgumentException();
@@ -280,12 +293,5 @@ public class HeartbeatService implements HttpFunction {
         }
         default -> throw new IllegalArgumentException();
         };
-    }
-}
-
-record BeatRequest(
-        String id,
-        String key,
-        String verificationMethod,
-        Collection<String> witnesses) {
+    }    
 }
