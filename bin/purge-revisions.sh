@@ -16,7 +16,6 @@ else
   FUNCTIONS="$FUNCTION_ID"
 fi
 
-
 REVISIONS=""
 
 for FNC in $FUNCTIONS; do
@@ -52,4 +51,5 @@ while IFS="|" read -r REGION REV; do
     continue 
   fi
   echo "gcloud run revisions delete "$REV" --region="$REGION" --quiet"
+  gcloud run revisions delete "$REV" --region="$REGION" --quiet
 done <<< "$REVISIONS"
