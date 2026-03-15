@@ -1,5 +1,6 @@
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,7 +26,13 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.tasks.v2.CloudTasksClient;
+import com.google.cloud.tasks.v2.CreateTaskRequest;
+import com.google.cloud.tasks.v2.HttpMethod;
+import com.google.cloud.tasks.v2.QueueName;
+import com.google.cloud.tasks.v2.Task;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.protobuf.ByteString;
 
 import jakarta.json.Json;
 import jakarta.json.JsonException;
@@ -41,7 +48,9 @@ public class HeartbeatService implements HttpFunction {
      * Reusable KMS client to minimize latency during "warm" starts. Initialized
      * once per container instance.
      */
-    private static final KeyManagementServiceClient KMS_CLIENT;
+    private static final KeyManagementServiceClient KMS;
+
+    private static final CloudTasksClient TASKS;
 
     private static final Executor EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -52,32 +61,43 @@ public class HeartbeatService implements HttpFunction {
 
     // Static configuration detected at startup
     private static final KeyRingName KEY_RING;
+    private static final QueueName QUEUE;
 
     // Environment variables
     private static final String BUCKET_NAME;
+    private static final String WITNESS_AGENT_URL;
 
     static {
         BUCKET_NAME = System.getenv("BUCKET_NAME");
+        WITNESS_AGENT_URL = System.getenv("WITNESS_AGENT");
 
         var kmsLocation = System.getenv("KMS_LOCATION");
         var kmsKeyRingName = System.getenv("KMS_KEY_RING");
+        var queueLocation = System.getenv("QUEUE_LOCATION");
+        var queueName = System.getenv("QUEUE_NAME");
 
-        if (BUCKET_NAME == null || kmsLocation == null || kmsKeyRingName == null) {
+        if (BUCKET_NAME == null || WITNESS_AGENT_URL == null
+                || kmsLocation == null || kmsKeyRingName == null
+                || queueLocation == null || queueName == null) {
             throw new IllegalStateException("Incomplete environment configuration");
         }
 
         var project = ServiceOptions.getDefaultProjectId();
 
         KEY_RING = KeyRingName.of(project, kmsLocation, kmsKeyRingName);
+        QUEUE = QueueName.of(ServiceOptions.getDefaultProjectId(), queueLocation, queueName);
 
         try {
-
-            KMS_CLIENT = KeyManagementServiceClient.create();
+            KMS = KeyManagementServiceClient.create();
+            TASKS = CloudTasksClient.create();
 
             // Ensure client is closed when the JVM shuts down
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                if (KMS_CLIENT != null) {
-                    KMS_CLIENT.close();
+                if (KMS != null) {
+                    KMS.close();
+                }
+                if (TASKS != null) {
+                    TASKS.close();
                 }
             }));
 
@@ -86,7 +106,7 @@ public class HeartbeatService implements HttpFunction {
             LOG.info(String.format("Initialized for %s", KEY_RING.toString()));
 
         } catch (IOException e) {
-            throw new IllegalStateException("KMS initialization failed", e);
+            throw new IllegalStateException("Initialization failed", e);
         }
     }
 
@@ -143,7 +163,7 @@ public class HeartbeatService implements HttpFunction {
         final var kmsKeyResource = KEY_RING.toString()
                 + "/cryptoKeys/"
                 + request.key();
-        
+
         return ApiFutures.transform(
                 ApiFutures.allAsList(Arrays.asList(
                         getCryptoSuiteAsync(kmsKeyResource),
@@ -167,6 +187,10 @@ public class HeartbeatService implements HttpFunction {
                     var signedEvent = new LinkedHashMap<>(unsignedEvent);
                     signedEvent.put("proof", proof);
 
+                    storeLog(kmsKeyResource, null, null);
+                    
+                    pushWitnessAgentTaskAsync(kmsKeyResource, null);
+                    
                     return signedEvent.toString();
                 },
                 MoreExecutors.directExecutor());
@@ -174,13 +198,32 @@ public class HeartbeatService implements HttpFunction {
 
     private ApiFuture<CryptoSuite> getCryptoSuiteAsync(final String kmsKeyResource) {
         return ApiFutures.transform(
-                KMS_CLIENT
+                KMS
                         .getPublicKeyCallable()
                         .futureCall(GetPublicKeyRequest.newBuilder()
                                 .setName(kmsKeyResource)
                                 .build()),
-                publicKey -> CryptoSuite.newSuite(publicKey.getAlgorithm(), KMS_CLIENT),
+                publicKey -> CryptoSuite.newSuite(publicKey.getAlgorithm(), KMS),
                 MoreExecutors.directExecutor());
+    }
+
+    private ApiFuture<Task> pushWitnessAgentTaskAsync(String did, List<String> witnesses) {
+
+        var request = ""; // TODO
+
+        Task task = Task.newBuilder()
+                .setHttpRequest(com.google.cloud.tasks.v2.HttpRequest.newBuilder()
+                        .setBody(ByteString.copyFrom(request, StandardCharsets.UTF_8))
+                        .setHttpMethod(HttpMethod.POST)
+                        .setUrl(WITNESS_AGENT_URL)
+                        .putHeaders("Content-Type", "application/json")
+                        .build())
+                .build();
+
+        return TASKS.createTaskCallable().futureCall(CreateTaskRequest.newBuilder()
+                .setParent(QUEUE.toString())
+                .setTask(task)
+                .build());
     }
 
     private void storeLog(String id, Blob blob, byte[] log) {
@@ -229,7 +272,6 @@ record BeatRequest(
         String key,
         String verificationMethod,
         Collection<String> witnesses) {
-    
 
     public static BeatRequest parseRequest(JsonParser parser, JsonParser.Event event) {
 
@@ -293,5 +335,5 @@ record BeatRequest(
         }
         default -> throw new IllegalArgumentException();
         };
-    }    
+    }
 }
